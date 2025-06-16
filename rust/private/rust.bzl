@@ -265,6 +265,7 @@ def _rust_binary_impl(ctx):
             compile_data = depset(compile_data),
             compile_data_targets = depset(ctx.attr.compile_data),
             owner = ctx.label,
+            crate_features = ctx.attr.crate_features,
         ),
     )
 
@@ -429,6 +430,7 @@ def _rust_test_impl(ctx):
             compile_data = depset(compile_data),
             compile_data_targets = depset(ctx.attr.compile_data),
             owner = ctx.label,
+            crate_features = [],
         )
 
     coverage = toolchain.llvm_cov and ctx.coverage_instrumented(target = ctx.attr.crate)
