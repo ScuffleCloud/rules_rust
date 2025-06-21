@@ -1,0 +1,18 @@
+{
+    {%- for id, path in context.workspace_members %}
+    {%- set workspace_member = context.crates | get(key=id) %}
+    "{{ path }}": {
+        {%- if workspace_member.crate_features | length %}
+        {%- for feature, features in workspace_member.crate_features %}
+        "{{ feature | addslashes }}": [
+            {%- for feature in features %}
+            {%- if feature is not starting_with("dep:") and "/" not in feature %}
+                "{{ feature | addslashes }}",
+            {%- endif %}
+            {%- endfor %}
+        ],
+        {%- endfor %}
+        {%- endif %}
+    },
+    {%- endfor %}
+}

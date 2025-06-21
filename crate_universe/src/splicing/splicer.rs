@@ -139,9 +139,9 @@ impl<'a> SplicerKind<'a> {
     #[tracing::instrument(skip_all)]
     fn splice_workspace(
         workspace_dir: &Utf8Path,
-        path: &&Utf8PathBuf,
-        manifest: &&Manifest,
-        splicing_manifest: &&SplicingManifest,
+        path: &Utf8PathBuf,
+        manifest: &Manifest,
+        splicing_manifest: &SplicingManifest,
     ) -> Result<SplicedManifest> {
         let mut manifest = (*manifest).clone();
         let manifest_dir = path
@@ -164,7 +164,7 @@ impl<'a> SplicerKind<'a> {
         }
 
         let root_manifest_path = workspace_dir.join("Cargo.toml");
-        let member_manifests = BTreeMap::from([(*path, String::new())]);
+        let member_manifests = BTreeMap::from([(path, String::new())]);
 
         // Write the generated metadata to the manifest
         let workspace_metadata = WorkspaceMetadata::new(splicing_manifest, member_manifests)?;
@@ -180,9 +180,9 @@ impl<'a> SplicerKind<'a> {
     #[tracing::instrument(skip_all)]
     fn splice_package(
         workspace_dir: &Utf8Path,
-        path: &&Utf8PathBuf,
-        manifest: &&Manifest,
-        splicing_manifest: &&SplicingManifest,
+        path: &Utf8PathBuf,
+        manifest: &Manifest,
+        splicing_manifest: &SplicingManifest,
     ) -> Result<SplicedManifest> {
         let manifest_dir = path
             .parent()
@@ -211,7 +211,7 @@ impl<'a> SplicerKind<'a> {
         }
 
         let root_manifest_path = workspace_dir.join("Cargo.toml");
-        let member_manifests = BTreeMap::from([(*path, String::new())]);
+        let member_manifests = BTreeMap::from([(path, String::new())]);
 
         // Write the generated metadata to the manifest
         let workspace_metadata = WorkspaceMetadata::new(splicing_manifest, member_manifests)?;
@@ -227,8 +227,8 @@ impl<'a> SplicerKind<'a> {
     #[tracing::instrument(skip_all)]
     fn splice_multi_package(
         workspace_dir: &Utf8Path,
-        manifests: &&BTreeMap<Utf8PathBuf, Manifest>,
-        splicing_manifest: &&SplicingManifest,
+        manifests: &BTreeMap<Utf8PathBuf, Manifest>,
+        splicing_manifest: &SplicingManifest,
     ) -> Result<SplicedManifest> {
         let mut manifest = default_cargo_workspace_manifest(&splicing_manifest.resolver_version);
 
@@ -744,7 +744,7 @@ mod test {
                             "url": "https://crates.io/"
                         }
                     },
-                    "tree_metadata": {}
+                    "resolver_metadata": {}
                 }
             })
         } else {
@@ -752,7 +752,7 @@ mod test {
                 "cargo-bazel": {
                     "package_prefixes": {},
                     "sources": {},
-                    "tree_metadata": {}
+                    "resolver_metadata": {}
                 }
             })
         };

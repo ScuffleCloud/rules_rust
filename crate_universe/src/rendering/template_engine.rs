@@ -7,7 +7,7 @@ use anyhow::{Context as AnyhowContext, Result};
 use serde_json::{from_value, to_value, Value};
 
 use crate::config::RenderConfig;
-use crate::context::{Context, SingleBuildFileRenderContext};
+use crate::context::{Context, DepFeatureMap, SingleBuildFileRenderContext};
 use crate::rendering::{
     render_crate_bazel_label, render_crate_bazel_repository, render_crate_build_file,
     render_module_label, CrateContext, Platforms,
@@ -42,6 +42,20 @@ impl TemplateEngine {
                 include_str!(concat!(
                     env!("CARGO_MANIFEST_DIR"),
                     "/src/rendering/templates/partials/module/deps_map.j2"
+                )),
+            ),
+            (
+                "partials/module/feature_flags_map.j2",
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/rendering/templates/partials/module/feature_flags_map.j2"
+                )),
+            ),
+            (
+                "partials/module/resolved_feature_flags_map.j2",
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/rendering/templates/partials/module/resolved_feature_flags_map.j2"
                 )),
             ),
             (
@@ -122,6 +136,7 @@ impl TemplateEngine {
 
         let mut context = tera::Context::new();
         context.insert("default_select_list", &Select::<String>::default());
+        context.insert("default_feature_map", &DepFeatureMap::default());
         context.insert("repository_name", &render_config.repository_name);
         context.insert("vendor_mode", &render_config.vendor_mode);
         context.insert("regen_command", &render_config.regen_command);

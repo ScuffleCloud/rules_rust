@@ -1,8 +1,7 @@
 //! Tools for gathering various kinds of metadata (Cargo.lock, Cargo metadata, Crate Index info).
 
 mod cargo_bin;
-mod cargo_tree_resolver;
-mod dependency;
+mod cargo_resolver;
 mod metadata_annotation;
 mod workspace_discoverer;
 
@@ -18,8 +17,7 @@ use cargo_metadata::Metadata as CargoMetadata;
 use tracing::debug;
 
 pub(crate) use self::cargo_bin::*;
-pub(crate) use self::cargo_tree_resolver::*;
-pub(crate) use self::dependency::*;
+pub(crate) use self::cargo_resolver::*;
 pub(crate) use self::metadata_annotation::*;
 pub(crate) use self::workspace_discoverer::*;
 

@@ -14,8 +14,7 @@ use serde::{Deserialize, Serialize};
 use crate::config::{CrateId, RenderConfig};
 use crate::context::platforms::resolve_cfg_platforms;
 use crate::lockfile::Digest;
-use crate::metadata::{Annotations, Dependency};
-use crate::select::Select;
+use crate::metadata::Annotations;
 use crate::utils::target_triple::TargetTriple;
 
 pub(crate) use self::crate_context::*;
@@ -65,21 +64,24 @@ impl Context {
         // Build a map of crate contexts
         let crates: BTreeMap<CrateId, CrateContext> = annotations
             .metadata
-            .crates
+            .packages
             .values()
-            .map(|annotation| {
-                let context = CrateContext::new(
-                    annotation,
-                    &annotations.metadata.packages,
+            .filter_map(|package| {
+                let id = CrateId::from(package);
+                CrateContext::new(
+                    &id,
+                    &annotations.metadata,
                     &annotations.lockfile.crates,
                     &annotations.pairred_extras,
-                    &annotations.metadata.workspace_metadata.tree_metadata,
                     annotations.config.generate_binaries,
                     annotations.config.generate_build_scripts,
                     sources_are_present,
-                )?;
-                let id = CrateId::new(context.name.clone(), context.version.clone());
-                Ok::<_, anyhow::Error>((id, context))
+                    annotations
+                        .metadata
+                        .workspace_members
+                        .contains(&package.id),
+                ).map(|ctx| Some((id, ctx)))
+                .transpose()
             })
             .collect::<Result<_, _>>()?;
 
@@ -126,26 +128,18 @@ impl Context {
             })
             .collect::<Result<BTreeMap<CrateId, String>>>()?;
 
-        let add_crate_ids = |crates: &mut BTreeSet<CrateId>,
-                             deps: &Select<BTreeSet<Dependency>>| {
-            for dep in deps.values() {
-                crates.insert(CrateId::from(
-                    &annotations.metadata.packages[&dep.package_id],
-                ));
-            }
-        };
-
         let mut direct_deps: BTreeSet<CrateId> = BTreeSet::new();
         let mut direct_dev_deps: BTreeSet<CrateId> = BTreeSet::new();
         for id in &annotations.metadata.workspace_members {
-            let deps = &annotations.metadata.crates[id].deps;
-            add_crate_ids(&mut direct_deps, &deps.normal_deps);
-            add_crate_ids(&mut direct_deps, &deps.proc_macro_deps);
-            add_crate_ids(&mut direct_deps, &deps.build_deps);
-            add_crate_ids(&mut direct_deps, &deps.build_link_deps);
-            add_crate_ids(&mut direct_deps, &deps.build_proc_macro_deps);
-            add_crate_ids(&mut direct_dev_deps, &deps.normal_dev_deps);
-            add_crate_ids(&mut direct_dev_deps, &deps.proc_macro_dev_deps);
+            let id = CrateId::from(&annotations.metadata.packages[id]);
+            let krate = &crates[&id];
+            direct_deps.extend(krate.common_attrs.deps.items().into_iter().map(|item| item.1.id));
+            direct_deps.extend(krate.common_attrs.proc_macro_deps.items().into_iter().map(|item| item.1.id));
+            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.deps.items().into_iter().map(|item| item.1.id)));
+            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.link_deps.items().into_iter().map(|item| item.1.id)));
+            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.proc_macro_deps.items().into_iter().map(|item| item.1.id)));
+            direct_dev_deps.extend(krate.common_attrs.deps_dev.items().into_iter().map(|item| item.1.id));
+            direct_dev_deps.extend(krate.common_attrs.proc_macro_deps_dev.items().into_iter().map(|item| item.1.id));
         }
 
         let unused_patches = annotations.lockfile.unused_patches;
@@ -207,7 +201,7 @@ impl Context {
     pub(crate) fn workspace_member_deps(&self) -> BTreeSet<CrateDependency> {
         self.workspace_members
             .keys()
-            .map(move |id| &self.crates[id])
+            .map(|id| &self.crates[id])
             .flat_map(|ctx| {
                 IntoIterator::into_iter([
                     &ctx.common_attrs.deps,
@@ -294,11 +288,24 @@ mod test {
     use camino::Utf8Path;
     use semver::Version;
 
-    use crate::config::Config;
+    use crate::{config::Config, metadata::CargoResolver, splicing::WorkspaceMetadata};
 
     fn mock_context_common() -> Context {
+        let mut metadata = crate::test::metadata::common();
+
+        let resolved = CargoResolver::new(&metadata).execute([
+            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into())
+        ]);
+
+        metadata.workspace_metadata = serde_json::json!({
+            "cargo-bazel": WorkspaceMetadata {
+                resolver_metadata: resolved,
+                ..Default::default()
+            }
+        });
+
         let annotations = Annotations::new(
-            crate::test::metadata::common(),
+            metadata,
             &None,
             crate::test::lockfile::common(),
             Config::default(),
@@ -310,8 +317,21 @@ mod test {
     }
 
     fn mock_context_aliases() -> Context {
+        let mut metadata = crate::test::metadata::alias();
+
+        let resolver_metadata = CargoResolver::new(&metadata).execute([
+            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".to_owned())
+        ]);
+
+        metadata.workspace_metadata = serde_json::json!({
+            "cargo-bazel": WorkspaceMetadata {
+                resolver_metadata,
+                ..Default::default()
+            }
+        });
+
         let annotations = Annotations::new(
-            crate::test::metadata::alias(),
+            metadata,
             &None,
             crate::test::lockfile::alias(),
             Config::default(),
@@ -323,8 +343,21 @@ mod test {
     }
 
     fn mock_context_workspace_build_scripts_deps() -> Context {
+        let mut metadata = crate::test::metadata::workspace_build_scripts_deps();
+
+        let resolver_metadata = CargoResolver::new(&metadata).execute([
+            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".to_owned())
+        ]);
+
+        metadata.workspace_metadata = serde_json::json!({
+            "cargo-bazel": WorkspaceMetadata {
+                resolver_metadata,
+                ..Default::default()
+            }
+        });
+
         let annotations = Annotations::new(
-            crate::test::metadata::workspace_build_scripts_deps(),
+            metadata,
             &None,
             crate::test::lockfile::workspace_build_scripts_deps(),
             Config {

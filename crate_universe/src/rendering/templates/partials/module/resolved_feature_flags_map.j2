@@ -1,0 +1,25 @@
+{%- macro features_block(features) -%}
+    {%- for feature in features %}
+    "{{ feature }}",
+    {%- endfor %}
+{%- endmacro dep_block -%}
+{
+    {%- for id, path in context.workspace_members %}
+    {%- set workspace_member = context.crates | get(key=id) %}
+    {%- set crate_features = workspace_member.common_attrs | get(key="crate_features", default=default_select_list) %}
+    "{{ path }}": {
+        {%- if crate_features.common | length %}
+        _COMMON_CONDITION: [
+            {{ self::features_block(features = crate_features.common) | indent }}
+        ],
+        {%- endif %}
+        {%- if crate_features.selects | length %}
+        {%- for condition, features in crate_features.selects %}
+        "{{ condition | addslashes }}": [
+            {{ self::features_block(features = features) | indent }}
+        ],
+        {%- endfor %}
+        {%- endif %}
+    },
+    {%- endfor %}
+}

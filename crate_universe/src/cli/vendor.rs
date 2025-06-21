@@ -14,8 +14,7 @@ use clap::Parser;
 use crate::config::{Config, VendorMode};
 use crate::context::Context;
 use crate::lockfile::{lock_context, write_lockfile};
-use crate::metadata::CargoUpdateRequest;
-use crate::metadata::TreeResolver;
+use crate::metadata::{CargoResolver, CargoUpdateRequest};
 use crate::metadata::{Annotations, Cargo, Generator, MetadataGenerator, VendorGenerator};
 use crate::rendering::{render_module_label, write_outputs, Renderer};
 use crate::splicing::{generate_lockfile, Splicer, SplicingManifest, WorkspaceMetadata};
@@ -231,10 +230,14 @@ pub fn vendor(opt: VendorOptions) -> anyhow::Result<()> {
     // Load the config from disk
     let config = Config::try_from_path(&opt.config)?;
 
-    let resolver_data = TreeResolver::new(cargo.clone()).generate(
-        manifest_path.as_path_buf(),
-        &config.supported_platform_triples,
-    )?;
+    // Write metadata to the workspace for future reuse
+    let (cargo_metadata, _) = Generator::new()
+        .with_cargo(cargo.clone())
+        .with_rustc(opt.rustc.clone())
+        .generate(manifest_path.as_path_buf())?;
+
+    let resolver = CargoResolver::new(&cargo_metadata);
+    let resolver_data = resolver.execute(&config.supported_platform_triples);
 
     // Write the registry url info to the manifest now that a lockfile has been generated
     WorkspaceMetadata::write_registry_urls_and_feature_map(
@@ -245,7 +248,7 @@ pub fn vendor(opt: VendorOptions) -> anyhow::Result<()> {
         manifest_path.as_path_buf(),
     )?;
 
-    // Write metadata to the workspace for future reuse
+    // Generate new metadata after the write.
     let (cargo_metadata, cargo_lockfile) = Generator::new()
         .with_cargo(cargo.clone())
         .with_rustc(opt.rustc.clone())

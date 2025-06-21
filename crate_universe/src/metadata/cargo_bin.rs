@@ -51,7 +51,10 @@ impl Cargo {
         other_options: Vec<String>,
     ) -> Result<MetadataCommand> {
         let mut command = MetadataCommand::new();
-        command.cargo_path(&self.path);
+        command
+            .features(cargo_metadata::CargoOpt::AllFeatures)
+            .cargo_path(&self.path);
+
         for (k, v) in self.env()? {
             command.env(k, v);
         }

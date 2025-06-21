@@ -840,7 +840,7 @@ impl Renderer {
 
         let mut aliases: Select<BTreeMap<Label, String>> = Select::default();
         for dependency_select in dependency_selects.iter() {
-            for (configuration, dependency) in dependency_select.items().into_iter() {
+            for (configuration, dependency) in dependency_select.items() {
                 if let Some(alias) = &dependency.alias {
                     let label = self.crate_label(
                         &dependency.id.name,
@@ -1033,7 +1033,7 @@ mod test {
     use indoc::indoc;
 
     use crate::config::{Config, CrateId};
-    use crate::context::{BuildScriptAttributes, CommonAttributes};
+    use crate::context::{BuildScriptAttributes, CommonAttributes, DepFeatureMaps};
     use crate::metadata::Annotations;
     use crate::test;
     use crate::utils::normalize_cargo_file_paths;
@@ -1107,6 +1107,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1145,6 +1147,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1187,6 +1191,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1261,6 +1267,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1324,6 +1332,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1362,6 +1372,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1402,6 +1414,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1463,6 +1477,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1497,6 +1513,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1537,6 +1555,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1589,6 +1609,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1711,6 +1733,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1758,6 +1782,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1813,6 +1839,8 @@ mod test {
                 license: None,
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1879,6 +1907,8 @@ mod test {
                 license: None,
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -1952,6 +1982,8 @@ mod test {
                 extra_aliased_targets: BTreeMap::default(),
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -2027,7 +2059,8 @@ mod test {
                         // which creates conflict in `render_module_build_file`
                         alias: Some("mock_crate".into()),
                         local_path: None,
-                    }])),
+                    }]))
+                    .into(),
                     ..Default::default()
                 },
                 build_script_attrs: None,
@@ -2035,6 +2068,10 @@ mod test {
                 license: None,
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: Some(DepFeatureMaps {
+                    ..Default::default()
+                }),
             },
         );
 
@@ -2129,6 +2166,8 @@ mod test {
                 license: None,
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: None,
             },
         );
 
@@ -2160,7 +2199,8 @@ mod test {
                             alias: Some("my_dependency_other".into()),
                             local_path: None,
                         },
-                    ])),
+                    ]))
+                    .into(),
                     ..Default::default()
                 },
                 build_script_attrs: None,
@@ -2168,6 +2208,8 @@ mod test {
                 license: None,
                 alias_rule: None,
                 override_targets: BTreeMap::default(),
+                crate_features: BTreeMap::default(),
+                feature_dep_maps: Some(Default::default()),
             },
         );
 
