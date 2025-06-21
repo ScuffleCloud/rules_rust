@@ -1,15 +1,14 @@
 //! Crate specific information embedded into [crate::context::Context] objects.
 
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use camino::Utf8PathBuf;
-use cargo_metadata::{Node, Package, PackageId};
+use cargo_metadata::{Package, PackageId};
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{AliasRule, CrateId, GenBinaries};
-use crate::metadata::{
-    CrateAnnotation, Dependency, PairedExtras, SourceAnnotation, TreeResolverMetadata,
-};
+use crate::metadata::{Dependency, MetadataAnnotation, PairedExtras, SourceAnnotation};
 use crate::select::Select;
 use crate::utils::sanitize_module_name;
 use crate::utils::starlark::{Glob, Label};
@@ -148,6 +147,30 @@ pub(crate) struct CommonAttributes {
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub(crate) tags: Vec<String>,
+}
+
+#[derive(serde::Deserialize, serde::Serialize, PartialEq, Eq, Clone, Debug, Default)]
+#[serde(default)]
+pub struct DepFeatureMap {
+    #[serde(skip_serializing_if = "Select::is_empty")]
+    pub(crate) required: Select<BTreeSet<CrateDependency>>,
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub(crate) optional: BTreeMap<String, Select<BTreeSet<CrateDependency>>>,
+}
+
+impl From<Select<BTreeSet<CrateDependency>>> for DepFeatureMap {
+    fn from(value: Select<BTreeSet<CrateDependency>>) -> Self {
+        Self {
+            required: value,
+            optional: BTreeMap::new(),
+        }
+    }
+}
+
+impl DepFeatureMap {
+    pub(crate) fn is_empty(&self) -> bool {
+        self.required.is_empty() && self.optional.is_empty()
+    }
 }
 
 impl Default for CommonAttributes {
@@ -363,64 +386,100 @@ pub(crate) struct CrateContext {
     #[serde(skip_serializing_if = "BTreeMap::is_empty")]
     #[serde(default)]
     pub(crate) override_targets: BTreeMap<String, Label>,
+
+    /// The list of features this crate has and what they enable.
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    #[serde(default)]
+    pub(crate) crate_features: BTreeMap<String, BTreeSet<String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub(crate) feature_dep_maps: Option<DepFeatureMaps>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct DepFeatureMaps {
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) deps: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) deps_dev: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) proc_macro_deps: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) proc_macro_deps_dev: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) build_deps: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) build_proc_macro_deps: DepFeatureMap,
+    #[serde(skip_serializing_if = "DepFeatureMap::is_empty")]
+    pub(crate) build_link_deps: DepFeatureMap,
 }
 
 impl CrateContext {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        annotation: &CrateAnnotation,
-        packages: &BTreeMap<PackageId, Package>,
+        crate_id: &CrateId,
+        metadata: &MetadataAnnotation,
         source_annotations: &BTreeMap<PackageId, SourceAnnotation>,
         extras: &BTreeMap<CrateId, PairedExtras>,
-        resolver_data: &TreeResolverMetadata,
         include_binaries: bool,
         include_build_scripts: bool,
         sources_are_present: bool,
+        build_feature_maps: bool,
     ) -> anyhow::Result<Self> {
-        let package: &Package = &packages[&annotation.node.id];
-        let current_crate_id = CrateId::new(package.name.clone(), package.version.clone());
-
-        let new_crate_dep = |dep: Dependency| -> CrateDependency {
-            let pkg = &packages[&dep.package_id];
-
+        let package = &metadata.packages[&metadata.package_map[crate_id]];
+        let new_crate_dep = |dep: &Dependency| {
             // Unfortunately, The package graph and resolve graph of cargo metadata have different representations
             // for the crate names (resolve graph sanitizes names to match module names) so to get the rest of this
             // content to align when rendering, the dependency target needs to be explicitly sanitized.
             let target = sanitize_module_name(&dep.target_name);
 
             CrateDependency {
-                id: CrateId::new(pkg.name.clone(), pkg.version.clone()),
+                id: dep.id.clone(),
                 target,
-                alias: dep.alias,
-                local_path: match source_annotations.get(&dep.package_id) {
+                alias: dep.alias.clone(),
+                local_path: match source_annotations.get(&metadata.package_map[&dep.id]) {
                     Some(SourceAnnotation::Path { path }) => Some(path.clone()),
                     _ => None,
                 },
             }
         };
 
-        // Convert the dependencies into renderable strings
-        let deps = annotation.deps.normal_deps.clone().map(new_crate_dep);
-        let deps_dev = annotation.deps.normal_dev_deps.clone().map(new_crate_dep);
-        let proc_macro_deps = annotation.deps.proc_macro_deps.clone().map(new_crate_dep);
-        let proc_macro_deps_dev = annotation
-            .deps
-            .proc_macro_dev_deps
-            .clone()
-            .map(new_crate_dep);
+        let resolved_items = metadata.workspace_metadata.resolver_metadata.get(&crate_id).as_ref().map(|r| r.items()).unwrap_or_default();
 
-        let crate_features = resolver_data
-            .get(&current_crate_id)
-            .map(|tree_data| {
-                let mut select = Select::<BTreeSet<String>>::new();
-                for (config, data) in tree_data.items() {
-                    for feature in data.features {
-                        select.insert(feature, config.clone());
-                    }
-                }
-                select
-            })
-            .unwrap_or_default();
+        // Convert the dependencies into renderable strings
+        let deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+            item.deps.iter().map(new_crate_dep).for_each(|value| {
+                select.insert(value, config.clone());
+            });
+            select
+        });
+        let deps_dev = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+            item.deps_dev.iter().map(new_crate_dep).for_each(|value| {
+                select.insert(value, config.clone());
+            });
+            select
+        });
+        let proc_macro_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+            item.proc_macro_deps.iter().map(new_crate_dep).for_each(|value| {
+                select.insert(value, config.clone());
+            });
+            select
+        });
+        let proc_macro_deps_dev = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+            item.proc_macro_deps_dev.iter().map(new_crate_dep).for_each(|value| {
+                select.insert(value, config.clone());
+            });
+            select
+        });
+
+        let crate_features = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+            item.features.iter().for_each(|value| {
+                select.insert(value.clone(), config.clone());
+            });
+            select
+        });
 
         // Gather all "common" attributes
         let mut common_attrs = CommonAttributes {
@@ -435,9 +494,7 @@ impl CrateContext {
         };
 
         // Locate extra settings for the current package.
-        let package_extra = extras
-            .iter()
-            .find(|(_, settings)| settings.package_id == package.id);
+        let package_extra = extras.get_key_value(&crate_id);
 
         let include_build_scripts =
             Self::crate_includes_build_script(package_extra, include_build_scripts);
@@ -453,8 +510,7 @@ impl CrateContext {
 
         // Iterate over each target and produce a Bazel target for all supported "kinds"
         let targets = Self::collect_targets(
-            &annotation.node,
-            packages,
+            package,
             gen_binaries,
             include_build_scripts,
             sources_are_present,
@@ -490,10 +546,10 @@ impl CrateContext {
             // Track the build script dependency
             common_attrs.deps.insert(
                 CrateDependency {
-                    id: current_crate_id,
+                    id: crate_id.clone(),
                     target: target.crate_name.clone(),
                     alias: None,
-                    local_path: match source_annotations.get(&annotation.node.id) {
+                    local_path: match source_annotations.get(&package.id) {
                         Some(SourceAnnotation::Path { path }) => Some(path.clone()),
                         _ => None,
                     },
@@ -501,13 +557,24 @@ impl CrateContext {
                 None,
             );
 
-            let build_deps = annotation.deps.build_deps.clone().map(new_crate_dep);
-            let build_link_deps = annotation.deps.build_link_deps.clone().map(new_crate_dep);
-            let build_proc_macro_deps = annotation
-                .deps
-                .build_proc_macro_deps
-                .clone()
-                .map(new_crate_dep);
+            let build_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+                item.build_deps.iter().map(new_crate_dep).for_each(|value| {
+                    select.insert(value, config.clone());
+                });
+                select
+            });
+            let build_link_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+                item.build_link_deps.iter().map(new_crate_dep).for_each(|value| {
+                    select.insert(value, config.clone());
+                });
+                select
+            });
+            let build_proc_macro_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
+                item.build_proc_macro_deps.iter().map(new_crate_dep).for_each(|value| {
+                    select.insert(value, config.clone());
+                });
+                select
+            });
 
             Some(BuildScriptAttributes {
                 deps: build_deps,
@@ -537,9 +604,89 @@ impl CrateContext {
 
         let license_file = Self::locate_license_file(package);
 
-        let package_url: Option<String> = match package.repository {
+        let package_url: Option<String> = match &package.repository {
             Some(..) => package.repository.clone(),
             None => package.homepage.clone(),
+        };
+
+        let feature_dep_maps = if build_feature_maps {
+            let features_by_dep = package
+                .features
+                .iter()
+                .flat_map(|(feature, items)| {
+                    items
+                        .iter()
+                        .filter_map(|item| {
+                            item.strip_prefix("dep:").or_else(|| {
+                                let (dep, _) = item.split_once('/')?;
+                                if !dep.contains('?') {
+                                    Some(dep)
+                                } else {
+                                    None
+                                }
+                            })
+                        })
+                        .map(|dep| (feature.as_str(), dep))
+                })
+                .into_grouping_map()
+                .collect::<BTreeSet<_>>();
+
+            fn new_feature_map(metadata: &MetadataAnnotation, items: impl IntoIterator<Item = (Option<String>, CrateDependency, bool)>, features_by_dep: &HashMap<&str, BTreeSet<&str>>) -> DepFeatureMap {
+                let mut deps = DepFeatureMap::default();
+    
+                for (config, crate_dep, optional) in items {
+                    if optional {
+                        let pkg = &metadata.packages[&metadata.package_map[&crate_dep.id]];
+
+    
+                        features_by_dep
+                            .get(
+                                crate_dep.alias
+                                    .as_deref()
+                                    .unwrap_or(&pkg.name),
+                            )
+                            .into_iter()
+                            .flatten()
+                            .copied()
+                            .for_each(|feature| {
+                                deps.optional
+                                    .entry(feature.to_string())
+                                    .or_default()
+                                    .insert(crate_dep.clone(), config.clone());
+                            });
+                    } else {
+                        deps.required.insert(crate_dep.clone(), config.clone());
+                    }
+                }
+    
+                deps
+            }
+
+            Some(DepFeatureMaps {
+                deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                deps_dev: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.deps_dev.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                proc_macro_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.proc_macro_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                proc_macro_deps_dev: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.proc_macro_deps_dev.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                build_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.build_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                build_proc_macro_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.build_proc_macro_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+                build_link_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
+                    item.build_link_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
+                }), &features_by_dep),
+            })
+        } else {
+            None
         };
 
         // Create the crate's context and apply extra settings
@@ -560,6 +707,12 @@ impl CrateContext {
             extra_aliased_targets: BTreeMap::new(),
             alias_rule: None,
             override_targets: BTreeMap::new(),
+            crate_features: package
+                .features
+                .iter()
+                .map(|(feature, features)| (feature.clone(), features.iter().cloned().collect()))
+                .collect(),
+            feature_dep_maps,
         }
         .with_overrides(extras))
     }
@@ -808,14 +961,11 @@ impl CrateContext {
 
     /// Collect all Bazel targets that should be generated for a particular Package
     fn collect_targets(
-        node: &Node,
-        packages: &BTreeMap<PackageId, Package>,
+        package: &Package,
         gen_binaries: &GenBinaries,
         include_build_scripts: bool,
         sources_are_present: bool,
     ) -> anyhow::Result<BTreeSet<Rule>> {
-        let package = &packages[&node.id];
-
         let package_root = package
             .manifest_path
             .as_std_path()
@@ -898,7 +1048,7 @@ mod test {
     use semver::Version;
 
     use crate::config::CrateAnnotations;
-    use crate::metadata::{Annotations, CargoTreeEntry};
+    use crate::metadata::{Annotations, CrateAnnotation};
 
     fn common_annotations() -> Annotations {
         Annotations::new(
@@ -915,22 +1065,18 @@ mod test {
     fn new_context() {
         let annotations = common_annotations();
 
-        let crate_annotation = &annotations.metadata.crates[&PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        }];
-
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &CrateId::new("common".to_owned(), Version::new(0, 1, 0)),
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            true,
         )
         .unwrap();
 
@@ -949,17 +1095,12 @@ mod test {
     fn context_with_overrides() {
         let annotations = common_annotations();
 
-        let package_id = PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        };
-
-        let crate_annotation = &annotations.metadata.crates[&package_id];
+        let crate_id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
 
         let mut pairred_extras = BTreeMap::new();
         pairred_extras.insert(
-            CrateId::new("common".to_owned(), semver::Version::new(0, 1, 0)),
+            crate_id.clone(),
             PairedExtras {
-                package_id,
                 crate_extra: CrateAnnotations {
                     gen_binaries: Some(GenBinaries::All),
                     data_glob: Some(BTreeSet::from(["**/data_glob/**".to_owned()])),
@@ -972,14 +1113,14 @@ mod test {
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &crate_id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            true,
         )
         .unwrap();
 
@@ -1031,25 +1172,23 @@ mod test {
     fn context_with_build_script() {
         let annotations = build_script_annotations();
 
-        let package_id = PackageId {
-            repr: "registry+https://github.com/rust-lang/crates.io-index#openssl-sys@0.9.87"
-                .to_owned(),
-        };
-
-        let crate_annotation = &annotations.metadata.crates[&package_id];
+        let crate_id = CrateId::new(
+            "openssl-sys".into(),
+            Version::new(0, 9, 87),
+        );
 
         let include_binaries = false;
         let include_build_scripts = true;
         let are_sources_present = false;
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &crate_id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            false,
         )
         .unwrap();
 
@@ -1079,25 +1218,23 @@ mod test {
     fn context_disabled_build_script() {
         let annotations = build_script_annotations();
 
-        let package_id = PackageId {
-            repr: "registry+https://github.com/rust-lang/crates.io-index#openssl-sys@0.9.87"
-                .to_owned(),
-        };
-
-        let crate_annotation = &annotations.metadata.crates[&package_id];
+        let crate_id = CrateId::new(
+            "openssl-sys".into(),
+            Version::new(0, 9, 87),
+        );
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &crate_id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            false,
         )
         .unwrap();
 
@@ -1117,24 +1254,23 @@ mod test {
     fn context_rlib_crate_type() {
         let annotations = crate_type_annotations();
 
-        let package_id = PackageId {
-            repr: "registry+https://github.com/rust-lang/crates.io-index#sysinfo@0.22.5".to_owned(),
-        };
-
-        let crate_annotation = &annotations.metadata.crates[&package_id];
+        let crate_id = CrateId::new(
+            "sysinfo".into(),
+            Version::new(0, 22, 5),
+        );
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &crate_id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            false,
         )
         .unwrap();
 
@@ -1155,29 +1291,22 @@ mod test {
         check_context: fn(context: CrateContext),
     ) {
         let mut annotations = common_annotations();
-        let crate_annotation = &annotations.metadata.crates[&PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        }];
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
-
-        let package = annotations
-            .metadata
-            .packages
-            .get_mut(&crate_annotation.node.id)
-            .unwrap();
-        set_package(package);
+        set_package(annotations.metadata.packages.get_mut(&PackageId {
+            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
+        }).unwrap());
 
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &CrateId::new("common".into(), Version::new(0, 1, 0)),
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            true,
         )
         .unwrap();
 
@@ -1276,41 +1405,35 @@ mod test {
     fn crate_context_features_from_annotations() {
         let mut annotations = common_annotations();
 
-        // Crate a fake feature to track
-        let mut select = Select::new();
-        select.insert(
-            CargoTreeEntry {
-                features: BTreeSet::from(["unique_feature".to_owned()]),
-                deps: BTreeSet::new(),
-            },
-            // The common config
-            None,
-        );
+        let id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
+
         annotations
             .metadata
             .workspace_metadata
-            .tree_metadata
+            .resolver_metadata
+            .entry(id.clone())
+            .or_default()
             .insert(
-                CrateId::new("common".to_owned(), Version::new(0, 1, 0)),
-                select,
+                CrateAnnotation {
+                    features: BTreeSet::from_iter(["unique_feature".to_owned()]),
+                    ..Default::default()
+                },
+                None
             );
 
-        let crate_annotation = &annotations.metadata.crates[&PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        }];
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
 
         let context = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            true,
         )
         .unwrap();
 
@@ -1331,22 +1454,20 @@ mod test {
         )
         .unwrap();
 
-        let crate_annotation = &annotations.metadata.crates[&PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        }];
+        let crate_id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let err = CrateContext::new(
-            crate_annotation,
-            &annotations.metadata.packages,
+            &crate_id,
+            &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
-            &annotations.metadata.workspace_metadata.tree_metadata,
             include_binaries,
             include_build_scripts,
             are_sources_present,
+            true,
         )
         .unwrap_err()
         .to_string();
