@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use anyhow::{ensure, Context, Result};
 use cargo_bazel::cli::{splice, SpliceOptions};
-use serde_json::{json, Value};
+use serde_json::json;
 
 fn should_skip_test() -> bool {
     // All test cases require network access to build pull crate metadata
@@ -65,7 +65,7 @@ fn setup_cargo_env(rfiles: &runfiles::Runfiles) -> Result<(PathBuf, PathBuf)> {
     Ok((cargo, rustc))
 }
 
-fn run(repository_name: &str, manifests: HashMap<String, String>, lockfile: &str) -> Value {
+fn run(repository_name: &str, manifests: HashMap<String, String>, lockfile: &str) -> cargo_metadata::Metadata {
     let scratch = tempfile::tempdir().unwrap();
     let runfiles = runfiles::Runfiles::create().unwrap();
 
@@ -120,7 +120,7 @@ fn run(repository_name: &str, manifests: HashMap<String, String>, lockfile: &str
     })
     .unwrap();
 
-    let metadata = serde_json::from_str::<Value>(
+    let metadata = serde_json::from_str::<cargo_metadata::Metadata>(
         &fs::read_to_string(scratch.path().join("out").join("metadata.json")).unwrap(),
     )
     .unwrap();
@@ -154,95 +154,419 @@ fn feature_generator() {
 
     assert_eq!(
         json!({
-            "common": {
+            "common": {},
+            "selects": {
+              "x86_64-apple-darwin": {
                 "deps": [
-                    "arrayvec 0.7.2",
-                    "bitflags 1.3.2",
-                    "fxhash 0.2.1",
-                    "log 0.4.17",
-                    "naga 0.10.0",
-                    "parking_lot 0.12.1",
-                    "profiling 1.0.7",
-                    "raw-window-handle 0.5.0",
-                    "thiserror 1.0.37",
-                    "wgpu-types 0.14.1",
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "arrayvec 0.7.2",
+                    "target_name": "arrayvec"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "bitflags 1.3.2",
+                    "target_name": "bitflags"
+                  },
+                  {
+                    "features": [],
+                    "id": "block 0.1.6",
+                    "optional": true,
+                    "target_name": "block"
+                  },
+                  {
+                    "features": [],
+                    "id": "core-graphics-types 0.1.1",
+                    "target_name": "core_graphics_types"
+                  },
+                  {
+                    "features": [],
+                    "id": "foreign-types 0.3.2",
+                    "optional": true,
+                    "target_name": "foreign_types"
+                  },
+                  {
+                    "features": [],
+                    "id": "fxhash 0.2.1",
+                    "target_name": "fxhash"
+                  },
+                  {
+                    "features": [],
+                    "id": "log 0.4.17",
+                    "target_name": "log"
+                  },
+                  {
+                    "alias": "mtl",
+                    "features": [
+                      "default"
+                    ],
+                    "id": "metal 0.24.0",
+                    "target_name": "metal"
+                  },
+                  {
+                    "features": [
+                      "clone",
+                      "default",
+                      "msl-out"
+                    ],
+                    "id": "naga 0.10.0",
+                    "target_name": "naga"
+                  },
+                  {
+                    "features": [],
+                    "id": "objc 0.2.7",
+                    "target_name": "objc"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "parking_lot 0.12.1",
+                    "target_name": "parking_lot"
+                  },
+                  {
+                    "features": [],
+                    "id": "profiling 1.0.7",
+                    "target_name": "profiling"
+                  },
+                  {
+                    "features": [],
+                    "id": "raw-window-handle 0.5.0",
+                    "target_name": "raw_window_handle"
+                  },
+                  {
+                    "features": [],
+                    "id": "thiserror 1.0.37",
+                    "target_name": "thiserror"
+                  },
+                  {
+                    "alias": "wgt",
+                    "features": [],
+                    "id": "wgpu-types 0.14.1",
+                    "target_name": "wgpu_types"
+                  }
                 ],
                 "features": [
-                    "default",
+                  "block",
+                  "default",
+                  "foreign-types",
+                  "metal"
+                ]
+              },
+              "x86_64-pc-windows-msvc": {
+                "deps": [
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "arrayvec 0.7.2",
+                    "target_name": "arrayvec"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "ash 0.37.1+1.3.235",
+                    "optional": true,
+                    "target_name": "ash"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "bit-set 0.5.3",
+                    "optional": true,
+                    "target_name": "bit_set"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "bitflags 1.3.2",
+                    "target_name": "bitflags"
+                  },
+                  {
+                    "alias": "native",
+                    "features": [
+                      "libloading"
+                    ],
+                    "id": "d3d12 0.5.0",
+                    "optional": true,
+                    "target_name": "d3d12"
+                  },
+                  {
+                    "features": [],
+                    "id": "fxhash 0.2.1",
+                    "target_name": "fxhash"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "gpu-alloc 0.5.3",
+                    "optional": true,
+                    "target_name": "gpu_alloc"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "gpu-descriptor 0.2.3",
+                    "optional": true,
+                    "target_name": "gpu_descriptor"
+                  },
+                  {
+                    "features": [],
+                    "id": "libloading 0.7.4",
+                    "optional": true,
+                    "target_name": "libloading"
+                  },
+                  {
+                    "features": [],
+                    "id": "log 0.4.17",
+                    "target_name": "log"
+                  },
+                  {
+                    "features": [
+                      "clone",
+                      "default",
+                      "hlsl-out",
+                      "spv-out"
+                    ],
+                    "id": "naga 0.10.0",
+                    "target_name": "naga"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "parking_lot 0.12.1",
+                    "target_name": "parking_lot"
+                  },
+                  {
+                    "features": [],
+                    "id": "profiling 1.0.7",
+                    "target_name": "profiling"
+                  },
+                  {
+                    "features": [],
+                    "id": "range-alloc 0.1.2",
+                    "optional": true,
+                    "target_name": "range_alloc"
+                  },
+                  {
+                    "features": [],
+                    "id": "raw-window-handle 0.5.0",
+                    "target_name": "raw_window_handle"
+                  },
+                  {
+                    "features": [],
+                    "id": "renderdoc-sys 0.7.1",
+                    "optional": true,
+                    "target_name": "renderdoc_sys"
+                  },
+                  {
+                    "features": [
+                      "union"
+                    ],
+                    "id": "smallvec 1.10.0",
+                    "optional": true,
+                    "target_name": "smallvec"
+                  },
+                  {
+                    "features": [],
+                    "id": "thiserror 1.0.37",
+                    "target_name": "thiserror"
+                  },
+                  {
+                    "alias": "wgt",
+                    "features": [],
+                    "id": "wgpu-types 0.14.1",
+                    "target_name": "wgpu_types"
+                  },
+                  {
+                    "features": [
+                      "d3d11",
+                      "d3d11_1",
+                      "d3d11_2",
+                      "d3d11sdklayers",
+                      "d3d12",
+                      "d3d12sdklayers",
+                      "d3d12shader",
+                      "dcomp",
+                      "dxgi1_6",
+                      "libloaderapi",
+                      "windef",
+                      "winuser"
+                    ],
+                    "id": "winapi 0.3.9",
+                    "target_name": "winapi"
+                  }
                 ],
-            },
-            "selects": {
-                "x86_64-apple-darwin": {
-                    "deps": [
-                        "block 0.1.6",
-                        "core-graphics-types 0.1.1",
-                        "foreign-types 0.3.2",
-                        "metal 0.24.0",
-                        "objc 0.2.7",
-                    ],
+                "features": [
+                  "ash",
+                  "bit-set",
+                  "default",
+                  "dx11",
+                  "dx12",
+                  "gpu-alloc",
+                  "gpu-descriptor",
+                  "libloading",
+                  "native",
+                  "range-alloc",
+                  "renderdoc",
+                  "renderdoc-sys",
+                  "smallvec",
+                  "vulkan"
+                ]
+              },
+              "x86_64-unknown-linux-gnu": {
+                "deps": [
+                  {
                     "features": [
-                        "block",
-                        "foreign-types",
-                        "metal",
+                      "default"
                     ],
-                },
-                "x86_64-pc-windows-msvc": {
-                    "deps": [
-                        "ash 0.37.1+1.3.235",
-                        "bit-set 0.5.3",
-                        "d3d12 0.5.0",
-                        "gpu-alloc 0.5.3",
-                        "gpu-descriptor 0.2.3",
-                        "libloading 0.7.4",
-                        "range-alloc 0.1.2",
-                        "renderdoc-sys 0.7.1",
-                        "smallvec 1.10.0",
-                        "winapi 0.3.9",
-                    ],
+                    "id": "arrayvec 0.7.2",
+                    "target_name": "arrayvec"
+                  },
+                  {
                     "features": [
-                        "ash",
-                        "bit-set",
-                        "dx11",
-                        "dx12",
-                        "gpu-alloc",
-                        "gpu-descriptor",
-                        "libloading",
-                        "native",
-                        "range-alloc",
-                        "renderdoc",
-                        "renderdoc-sys",
-                        "smallvec",
-                        "vulkan",
+                      "default"
                     ],
-                },
-                "x86_64-unknown-linux-gnu": {
-                    "deps": [
-                        "ash 0.37.1+1.3.235",
-                        "glow 0.11.2",
-                        "gpu-alloc 0.5.3",
-                        "gpu-descriptor 0.2.3",
-                        "khronos-egl 4.1.0",
-                        "libloading 0.7.4",
-                        "renderdoc-sys 0.7.1",
-                        "smallvec 1.10.0",
-                    ],
+                    "id": "ash 0.37.1+1.3.235",
+                    "optional": true,
+                    "target_name": "ash"
+                  },
+                  {
                     "features": [
-                        "ash",
-                        "egl",
-                        "gles",
-                        "glow",
-                        "gpu-alloc",
-                        "gpu-descriptor",
-                        "libloading",
-                        "renderdoc",
-                        "renderdoc-sys",
-                        "smallvec",
-                        "vulkan",
+                      "default"
                     ],
-                },
-            },
+                    "id": "bitflags 1.3.2",
+                    "target_name": "bitflags"
+                  },
+                  {
+                    "features": [],
+                    "id": "fxhash 0.2.1",
+                    "target_name": "fxhash"
+                  },
+                  {
+                    "features": [],
+                    "id": "glow 0.11.2",
+                    "optional": true,
+                    "target_name": "glow"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "gpu-alloc 0.5.3",
+                    "optional": true,
+                    "target_name": "gpu_alloc"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "gpu-descriptor 0.2.3",
+                    "optional": true,
+                    "target_name": "gpu_descriptor"
+                  },
+                  {
+                    "alias": "egl",
+                    "features": [
+                      "default",
+                      "dynamic"
+                    ],
+                    "id": "khronos-egl 4.1.0",
+                    "optional": true,
+                    "target_name": "khronos_egl"
+                  },
+                  {
+                    "features": [],
+                    "id": "libloading 0.7.4",
+                    "optional": true,
+                    "target_name": "libloading"
+                  },
+                  {
+                    "features": [],
+                    "id": "log 0.4.17",
+                    "target_name": "log"
+                  },
+                  {
+                    "features": [
+                      "clone",
+                      "default",
+                      "glsl-out",
+                      "spv-out"
+                    ],
+                    "id": "naga 0.10.0",
+                    "target_name": "naga"
+                  },
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "parking_lot 0.12.1",
+                    "target_name": "parking_lot"
+                  },
+                  {
+                    "features": [],
+                    "id": "profiling 1.0.7",
+                    "target_name": "profiling"
+                  },
+                  {
+                    "features": [],
+                    "id": "raw-window-handle 0.5.0",
+                    "target_name": "raw_window_handle"
+                  },
+                  {
+                    "features": [],
+                    "id": "renderdoc-sys 0.7.1",
+                    "optional": true,
+                    "target_name": "renderdoc_sys"
+                  },
+                  {
+                    "features": [
+                      "union"
+                    ],
+                    "id": "smallvec 1.10.0",
+                    "optional": true,
+                    "target_name": "smallvec"
+                  },
+                  {
+                    "features": [],
+                    "id": "thiserror 1.0.37",
+                    "target_name": "thiserror"
+                  },
+                  {
+                    "alias": "wgt",
+                    "features": [],
+                    "id": "wgpu-types 0.14.1",
+                    "target_name": "wgpu_types"
+                  }
+                ],
+                "features": [
+                  "ash",
+                  "default",
+                  "egl",
+                  "gles",
+                  "glow",
+                  "gpu-alloc",
+                  "gpu-descriptor",
+                  "libloading",
+                  "renderdoc",
+                  "renderdoc-sys",
+                  "smallvec",
+                  "vulkan"
+                ]
+              }
+            }
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["wgpu-hal 0.14.1"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["wgpu-hal 0.14.1"],
     );
 }
 
@@ -273,46 +597,99 @@ fn feature_generator_cfg_features() {
     assert_eq!(
         json!({
             "autocfg 1.1.0": {
-                "selects": {},
+              "common": {},
+              "selects": {}
             },
             "pin-project-lite 0.2.9": {
-                "selects": {},
+              "common": {},
+              "selects": {}
             },
             "target_cfg_features 0.1.0": {
-                "common": {
-                    "deps": [
-                        "tokio 1.25.0",
-                    ],
+              "common": {},
+              "selects": {
+                "wasm32-unknown-unknown": {
+                  "deps": [
+                    {
+                      "features": [
+                        "default"
+                      ],
+                      "id": "tokio 1.25.0",
+                      "target_name": "tokio"
+                    }
+                  ]
                 },
-                "selects": {},
+                "x86_64-apple-darwin": {
+                  "deps": [
+                    {
+                      "features": [
+                        "default",
+                        "fs"
+                      ],
+                      "id": "tokio 1.25.0",
+                      "target_name": "tokio"
+                    }
+                  ]
+                },
+                "x86_64-pc-windows-msvc": {
+                  "deps": [
+                    {
+                      "features": [
+                        "default"
+                      ],
+                      "id": "tokio 1.25.0",
+                      "target_name": "tokio"
+                    }
+                  ]
+                },
+                "x86_64-unknown-linux-gnu": {
+                  "deps": [
+                    {
+                      "features": [
+                        "default",
+                        "fs"
+                      ],
+                      "id": "tokio 1.25.0",
+                      "target_name": "tokio"
+                    }
+                  ]
+                }
+              }
             },
             "tokio 1.25.0": {
-                "common": {
-                    "deps": [
-                        "autocfg 1.1.0",
-                        "pin-project-lite 0.2.9",
-                    ],
-                    "features": [
-                        "default",
-                    ],
+              "common": {
+                "build_deps": [
+                  {
+                    "features": [],
+                    "id": "autocfg 1.1.0",
+                    "target_name": "autocfg"
+                  }
+                ],
+                "deps": [
+                  {
+                    "features": [],
+                    "id": "pin-project-lite 0.2.9",
+                    "target_name": "pin_project_lite"
+                  }
+                ],
+                "features": [
+                  "default"
+                ]
+              },
+              "selects": {
+                "x86_64-apple-darwin": {
+                  "features": [
+                    "fs"
+                  ]
                 },
-                // Note: "x86_64-pc-windows-msvc" is *not* here, despite
-                // being included in `supported_platform_triples` above!
-                "selects": {
-                    "x86_64-apple-darwin": {
-                        "features": [
-                            "fs",
-                        ],
-                    },
-                    "x86_64-unknown-linux-gnu": {
-                        "features": [
-                            "fs",
-                        ],
-                    },
-                },
-            },
+                "x86_64-unknown-linux-gnu": {
+                  "features": [
+                    "fs"
+                  ]
+                }
+              }
+            }
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"],
     );
 }
 
@@ -351,7 +728,7 @@ fn feature_generator_workspace() {
         "rules_rust/crate_universe/test_data/metadata/workspace/Cargo.lock",
     );
 
-    assert!(!metadata["metadata"]["cargo-bazel"]["tree_metadata"]["wgpu 0.14.0"].is_null());
+    assert!(!metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["wgpu 0.14.0"].is_null());
 }
 
 #[test]
@@ -378,19 +755,30 @@ fn feature_generator_crate_combined_features() {
     );
 
     // serde appears twice in the list of dependencies, with and without derive features
+    
     assert_eq!(
         json!({
-            "deps": [
-                "serde_derive 1.0.158",
-            ],
-            "features": [
+            "common": {
+                "features": [
                 "default",
                 "derive",
                 "serde_derive",
-                "std",
-            ],
+                "std"
+                ],
+                "proc_macro_deps": [
+                {
+                    "features": [
+                    "default"
+                    ],
+                    "id": "serde_derive 1.0.158",
+                    "optional": true,
+                    "target_name": "serde_derive"
+                }
+                ]
+            },
+            "selects": {}
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["serde 1.0.158"]["common"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["serde 1.0.158"],
     );
 }
 
@@ -421,101 +809,205 @@ fn resolver_2_deps() {
     assert_eq!(
         json!({
             "common": {
-                "deps": [
-                    "bytes 1.6.0",
-                    "pin-project-lite 0.2.14",
-                ],
-                "features": [
-                    "bytes",
-                    "default",
-                    "io-util",
-                ],
+              "deps": [
+                {
+                  "features": [
+                    "default"
+                  ],
+                  "id": "bytes 1.6.0",
+                  "optional": true,
+                  "target_name": "bytes"
+                },
+                {
+                  "features": [],
+                  "id": "pin-project-lite 0.2.14",
+                  "target_name": "pin_project_lite"
+                }
+              ],
+              "features": [
+                "bytes",
+                "default",
+                "io-util"
+              ]
             },
             // Note that there is no `wasm32-unknown-unknown` entry since all it's dependencies
             // are common. Also note that `mio` is unique to these platforms as it's something
             // that should be excluded from Wasm platforms.
             "selects": {
-                "x86_64-apple-darwin": {
-                    "deps": [
-                        "libc 0.2.153",
-                        "mio 0.8.11",
-                        "socket2 0.5.7",
-                    ],
+              "x86_64-apple-darwin": {
+                "deps": [
+                  {
                     "features": [
-                        "io-std",
-                        "libc",
-                        "mio",
-                        "net",
-                        "rt",
-                        "socket2",
-                        "sync",
-                        "time",
+                      "default"
                     ],
-                },
-                "x86_64-pc-windows-msvc": {
-                    "deps": [
-                        "mio 0.8.11",
-                        "socket2 0.5.7",
-                        "windows-sys 0.48.0",
-                    ],
+                    "id": "libc 0.2.153",
+                    "optional": true,
+                    "target_name": "libc"
+                  },
+                  {
                     "features": [
-                        "io-std",
-                        "libc",
-                        "mio",
-                        "net",
-                        "rt",
-                        "socket2",
-                        "sync",
-                        "time",
-                        "windows-sys",
+                      "net",
+                      "os-ext",
+                      "os-poll"
                     ],
-                },
-                "x86_64-unknown-linux-gnu": {
-                    "deps": [
-                        "libc 0.2.153",
-                        "mio 0.8.11",
-                        "socket2 0.5.7",
-                    ],
+                    "id": "mio 0.8.11",
+                    "optional": true,
+                    "target_name": "mio"
+                  },
+                  {
                     "features": [
-                        "io-std",
-                        "libc",
-                        "mio",
-                        "net",
-                        "rt",
-                        "socket2",
-                        "sync",
-                        "time",
+                      "all"
                     ],
-                },
-            },
+                    "id": "socket2 0.5.7",
+                    "optional": true,
+                    "target_name": "socket2"
+                  }
+                ],
+                "features": [
+                  "io-std",
+                  "libc",
+                  "net",
+                  "rt",
+                  "socket2",
+                  "sync",
+                  "time"
+                ]
+              },
+              "x86_64-pc-windows-msvc": {
+                "deps": [
+                  {
+                    "features": [
+                      "net",
+                      "os-ext",
+                      "os-poll"
+                    ],
+                    "id": "mio 0.8.11",
+                    "optional": true,
+                    "target_name": "mio"
+                  },
+                  {
+                    "features": [
+                      "all"
+                    ],
+                    "id": "socket2 0.5.7",
+                    "optional": true,
+                    "target_name": "socket2"
+                  },
+                  {
+                    "features": [
+                      "Win32_Foundation",
+                      "Win32_Security",
+                      "Win32_Storage_FileSystem",
+                      "Win32_System_Pipes",
+                      "Win32_System_SystemServices",
+                      "default"
+                    ],
+                    "id": "windows-sys 0.48.0",
+                    "optional": true,
+                    "target_name": "windows_sys"
+                  }
+                ],
+                "features": [
+                  "io-std",
+                  "libc",
+                  "net",
+                  "rt",
+                  "socket2",
+                  "sync",
+                  "time"
+                ]
+              },
+              "x86_64-unknown-linux-gnu": {
+                "deps": [
+                  {
+                    "features": [
+                      "default"
+                    ],
+                    "id": "libc 0.2.153",
+                    "optional": true,
+                    "target_name": "libc"
+                  },
+                  {
+                    "features": [
+                      "net",
+                      "os-ext",
+                      "os-poll"
+                    ],
+                    "id": "mio 0.8.11",
+                    "optional": true,
+                    "target_name": "mio"
+                  },
+                  {
+                    "features": [
+                      "all"
+                    ],
+                    "id": "socket2 0.5.7",
+                    "optional": true,
+                    "target_name": "socket2"
+                  }
+                ],
+                "features": [
+                  "io-std",
+                  "libc",
+                  "net",
+                  "rt",
+                  "socket2",
+                  "sync",
+                  "time"
+                ]
+              }
+            }
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["tokio 1.37.0"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["tokio 1.37.0"],
     );
 
     assert_eq!(
         json!({
             // Note linux is not present since linux has no unique dependencies or features
             // for this crate.
+            "common": {},
             "selects": {
-                "wasm32-unknown-unknown": {
-                    "deps": [
-                        "js-sys 0.3.69",
-                        "wasm-bindgen 0.2.92",
+              "wasm32-unknown-unknown": {
+                "deps": [
+                  {
+                    "features": [],
+                    "id": "js-sys 0.3.69",
+                    "target_name": "js_sys"
+                  },
+                  {
+                    "features": [
+                      "default"
                     ],
-                },
-                "x86_64-apple-darwin": {
-                    "deps": [
-                        "core-foundation-sys 0.8.6",
+                    "id": "wasm-bindgen 0.2.92",
+                    "target_name": "wasm_bindgen"
+                  }
+                ]
+              },
+              "x86_64-apple-darwin": {
+                "deps": [
+                  {
+                    "features": [
+                      "default"
                     ],
-                },
-                "x86_64-pc-windows-msvc": {
-                    "deps": [
-                        "windows-core 0.52.0",
+                    "id": "core-foundation-sys 0.8.6",
+                    "target_name": "core_foundation_sys"
+                  }
+                ]
+              },
+              "x86_64-pc-windows-msvc": {
+                "deps": [
+                  {
+                    "features": [
+                      "default"
                     ],
-                },
-            },
-        }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["iana-time-zone 0.1.60"],
+                    "id": "windows-core 0.52.0",
+                    "target_name": "windows_core"
+                  }
+                ]
+              }
+            }
+          }),
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["iana-time-zone 0.1.60"],
     );
 }
 
@@ -552,68 +1044,183 @@ fn host_specific_build_deps() {
 
     assert_eq!(
         json!({
-            "common": {
-                "deps": [
-                    "bitflags 2.6.0",
-                ],
-                "features": [
-                    "alloc",
-                    "default",
-                    "fs",
-                    "libc-extra-traits",
-                    "std",
-                    "use-libc-auxv",
-                ],
-            },
+            "common": {},
             // Note that there is no `wasm32-unknown-unknown` or `x86_64-pc-windows-msvc` entry
             // since these platforms do not depend on `rustix`. The chain breaks due to the
             // conditions here: https://github.com/Stebalien/tempfile/blob/v3.11.0/Cargo.toml#L25-L33
             "selects": {
                 "x86_64-apple-darwin": {
                     "deps": [
-                        "errno 0.3.9",
-                        "libc 0.2.158",
+                        {
+                            "features": [
+                                "std"
+                            ],
+                            "id": "bitflags 2.6.0",
+                            "target_name": "bitflags"
+                        },
+                        {
+                            "alias": "libc_errno",
+                            "features": [
+                                "std"
+                            ],
+                            "id": "errno 0.3.9",
+                            "target_name": "errno"
+                        },
+                        {
+                            "features": [
+                                "extra_traits",
+                                "std"
+                            ],
+                            "id": "libc 0.2.158",
+                            "target_name": "libc"
+                        }
                     ],
+                    "features": [
+                        "alloc",
+                        "default",
+                        "fs",
+                        "libc-extra-traits",
+                        "std",
+                        "use-libc-auxv"
+                    ]
                 },
                 "x86_64-unknown-linux-gnu": {
                     "deps": [
-                        "linux-raw-sys 0.4.14",
+                        {
+                            "features": [
+                                "std"
+                            ],
+                            "id": "bitflags 2.6.0",
+                            "target_name": "bitflags"
+                        },
+                        {
+                            "features": [
+                                "elf",
+                                "errno",
+                                "general",
+                                "ioctl",
+                                "no_std"
+                            ],
+                            "id": "linux-raw-sys 0.4.14",
+                            "target_name": "linux_raw_sys"
+                        }
                     ],
-                },
+                    "features": [
+                        "alloc",
+                        "default",
+                        "fs",
+                        "libc-extra-traits",
+                        "std",
+                        "use-libc-auxv"
+                    ]
+                }
             },
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["rustix 0.38.36"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["rustix 0.38.36"],
     );
 
     assert_eq!(
         json!({
-            "common": {
-                "deps": [
-                    "cfg-if 1.0.0",
-                    "fastrand 2.1.1",
-                    "once_cell 1.19.0",
-                ],
-            },
+            "common": {},
             // Note that windows does not contain `rustix` and instead `windows-sys`.
             // This shows correct detection of exec platform constraints.
             "selects": {
                 "x86_64-apple-darwin": {
                     "deps": [
-                        "rustix 0.38.36",
-                    ],
+                        {
+                            "features": [],
+                            "id": "cfg-if 1.0.0",
+                            "target_name": "cfg_if"
+                        },
+                        {
+                            "features": [
+                                "default"
+                            ],
+                            "id": "fastrand 2.1.1",
+                            "target_name": "fastrand"
+                        },
+                        {
+                            "features": [
+                                "std"
+                            ],
+                            "id": "once_cell 1.19.0",
+                            "target_name": "once_cell"
+                        },
+                        {
+                            "features": [
+                                "default",
+                                "fs"
+                            ],
+                            "id": "rustix 0.38.36",
+                            "target_name": "rustix"
+                        }
+                    ]
                 },
                 "x86_64-pc-windows-msvc": {
                     "deps": [
-                        "windows-sys 0.59.0",
-                    ],
+                        {
+                            "features": [],
+                            "id": "cfg-if 1.0.0",
+                            "target_name": "cfg_if"
+                        },
+                        {
+                            "features": [
+                                "default"
+                            ],
+                            "id": "fastrand 2.1.1",
+                            "target_name": "fastrand"
+                        },
+                        {
+                            "features": [
+                                "std"
+                            ],
+                            "id": "once_cell 1.19.0",
+                            "target_name": "once_cell"
+                        },
+                        {
+                            "features": [
+                                "Win32_Foundation",
+                                "Win32_Storage_FileSystem",
+                                "default"
+                            ],
+                            "id": "windows-sys 0.59.0",
+                            "target_name": "windows_sys"
+                        }
+                    ]
                 },
                 "x86_64-unknown-linux-gnu": {
                     "deps": [
-                        "rustix 0.38.36",
-                    ],
-                },
-            },
+                        {
+                            "features": [],
+                            "id": "cfg-if 1.0.0",
+                            "target_name": "cfg_if"
+                        },
+                        {
+                            "features": [
+                                "default"
+                            ],
+                            "id": "fastrand 2.1.1",
+                            "target_name": "fastrand"
+                        },
+                        {
+                            "features": [
+                                "std"
+                            ],
+                            "id": "once_cell 1.19.0",
+                            "target_name": "once_cell"
+                        },
+                        {
+                            "features": [
+                                "default",
+                                "fs"
+                            ],
+                            "id": "rustix 0.38.36",
+                            "target_name": "rustix"
+                        }
+                    ]
+                }
+            }
         }),
-        metadata["metadata"]["cargo-bazel"]["tree_metadata"]["tempfile 3.12.0"],
+        metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["tempfile 3.12.0"],
     );
 }
