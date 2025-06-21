@@ -42,8 +42,6 @@ filegroup(
     srcs = glob([
         "src/**/*.bzl",
         "src/**/*.j2",
-        "src/**/*.sh",
-        "src/**/*.bat",
     ]),
 )
 

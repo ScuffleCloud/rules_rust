@@ -9,8 +9,8 @@ use anyhow::Result;
 use serde::Deserialize;
 
 pub use crate::config::CrateId;
-use crate::context::crate_context::{CrateDependency, Rule};
-use crate::context::{CommonAttributes, Context};
+use crate::context::crate_context::Rule;
+use crate::context::{CommonAttributes, Context, CrateDependency};
 use crate::select::Select;
 
 /// Parse a lockfile at a path on disk.

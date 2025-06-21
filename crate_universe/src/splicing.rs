@@ -16,7 +16,8 @@ use cargo_toml::Manifest;
 use serde::{Deserialize, Serialize};
 
 use crate::config::CrateId;
-use crate::metadata::{Cargo, CargoUpdateRequest, LockGenerator, TreeResolverMetadata};
+use crate::metadata::{Cargo, CargoUpdateRequest, LockGenerator, CrateAnnotation};
+use crate::select::Select;
 use crate::utils;
 use crate::utils::starlark::Label;
 
@@ -170,11 +171,8 @@ pub(crate) struct WorkspaceMetadata {
     /// Paths from the root of a Bazel workspace to a Cargo package
     pub(crate) package_prefixes: BTreeMap<String, String>,
 
-    /// Feature set for each target triplet and crate.
-    ///
-    /// We store this here because it's computed during the splicing phase via
-    /// calls to "cargo tree" which need the full spliced workspace.
-    pub(crate) tree_metadata: TreeResolverMetadata,
+    /// Information about the package / feature selection
+    pub(crate) resolver_metadata: BTreeMap<CrateId, Select<CrateAnnotation>>,
 }
 
 impl TryFrom<toml::Value> for WorkspaceMetadata {
@@ -186,19 +184,6 @@ impl TryFrom<toml::Value> for WorkspaceMetadata {
                 .to_owned()
                 .try_into()
                 .context("Failed to deserialize toml value"),
-            None => bail!("cargo-bazel workspace metadata not found"),
-        }
-    }
-}
-
-impl TryFrom<serde_json::Value> for WorkspaceMetadata {
-    type Error = anyhow::Error;
-
-    fn try_from(value: serde_json::Value) -> Result<Self, Self::Error> {
-        match value.get("cargo-bazel") {
-            Some(value) => {
-                serde_json::from_value(value.to_owned()).context("Failed to deserialize json value")
-            }
             None => bail!("cargo-bazel workspace metadata not found"),
         }
     }
@@ -247,7 +232,7 @@ impl WorkspaceMetadata {
             sources: BTreeMap::new(),
             workspace_prefix,
             package_prefixes,
-            tree_metadata: TreeResolverMetadata::new(),
+            resolver_metadata: BTreeMap::new(),
         })
     }
 
@@ -257,7 +242,7 @@ impl WorkspaceMetadata {
     pub(crate) fn write_registry_urls_and_feature_map(
         cargo: &Cargo,
         lockfile: &cargo_lock::Lockfile,
-        resolver_data: TreeResolverMetadata,
+        resolver_data: BTreeMap<CrateId, Select<CrateAnnotation>>,
         input_manifest_path: &Utf8Path,
         output_manifest_path: &Utf8Path,
     ) -> Result<()> {
@@ -407,7 +392,8 @@ impl WorkspaceMetadata {
                         source_info.map(|source_info| (crate_id, source_info))
                     }),
             );
-        workspace_metaata.tree_metadata = resolver_data;
+
+        workspace_metaata.resolver_metadata = resolver_data;
         workspace_metaata.inject_into(&mut manifest)?;
 
         write_root_manifest(output_manifest_path.as_std_path(), manifest)?;

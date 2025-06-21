@@ -9,9 +9,7 @@ use itertools::Itertools;
 
 use crate::cli::Result;
 use crate::config::Config;
-use crate::metadata::{
-    write_metadata, Cargo, CargoUpdateRequest, Generator, MetadataGenerator, TreeResolver,
-};
+use crate::metadata::{write_metadata, Cargo, CargoResolver, CargoUpdateRequest, Generator, MetadataGenerator};
 use crate::splicing::{
     generate_lockfile, Splicer, SplicerKind, SplicingManifest, WorkspaceMetadata,
 };
@@ -103,14 +101,17 @@ pub fn splice(opt: SpliceOptions) -> Result<()> {
     )
     .context("Failed to generate lockfile")?;
 
-    let config = Config::try_from_path(&opt.config).context("Failed to parse config")?;
+    // Write metadata to the workspace for future reuse
+    let (cargo_metadata, _) = Generator::new()
+        .with_cargo(cargo.clone())
+        .with_rustc(opt.rustc.clone())
+        .generate(manifest_path.as_path_buf())
+        .context("Failed to generate cargo metadata")?;
 
-    let resolver_data = TreeResolver::new(cargo.clone())
-        .generate(
-            manifest_path.as_path_buf(),
-            &config.supported_platform_triples,
-        )
-        .context("Failed to generate features")?;
+    let config = Config::try_from_path(&opt.config).context("Failed to parse config")?;
+    let resolver = CargoResolver::new(&cargo_metadata);
+    let resolver_data = resolver.execute(&config.supported_platform_triples);
+
     // Write the registry url info to the manifest now that a lockfile has been generated
     WorkspaceMetadata::write_registry_urls_and_feature_map(
         &cargo,
@@ -121,14 +122,13 @@ pub fn splice(opt: SpliceOptions) -> Result<()> {
     )
     .context("Failed to write registry URLs and feature map")?;
 
-    let output_dir = opt.output_dir.clone();
-
-    // Write metadata to the workspace for future reuse
     let (cargo_metadata, _) = Generator::new()
         .with_cargo(cargo.clone())
         .with_rustc(opt.rustc.clone())
         .generate(manifest_path.as_path_buf())
         .context("Failed to generate cargo metadata")?;
+
+    let output_dir = opt.output_dir.clone();
 
     let cargo_lockfile_path = manifest_path
         .as_path_buf()
