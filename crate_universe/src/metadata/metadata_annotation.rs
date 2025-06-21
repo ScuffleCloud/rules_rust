@@ -10,22 +10,11 @@ use hex::ToHex;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{Commitish, Config, CrateAnnotations, CrateId};
-use crate::metadata::dependency::DependencySet;
-use crate::metadata::TreeResolverMetadata;
+use crate::metadata::CargoResolver;
 use crate::splicing::{SourceInfo, WorkspaceMetadata};
 
 pub(crate) type CargoMetadata = cargo_metadata::Metadata;
 pub(crate) type CargoLockfile = cargo_lock::Lockfile;
-
-/// Additional information about a crate relative to other crates in a dependency graph.
-#[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct CrateAnnotation {
-    /// The crate's node in the Cargo "resolve" graph.
-    pub(crate) node: Node,
-
-    /// The crate's sorted dependencies.
-    pub(crate) deps: DependencySet,
-}
 
 /// Additional information about a Cargo workspace's metadata.
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -33,8 +22,8 @@ pub(crate) struct MetadataAnnotation {
     /// All packages found within the Cargo metadata
     pub(crate) packages: BTreeMap<PackageId, Package>,
 
-    /// All [CrateAnnotation]s for all packages
-    pub(crate) crates: BTreeMap<PackageId, CrateAnnotation>,
+    /// Map of crate ids to package ids
+    pub(crate) package_map: BTreeMap<CrateId, PackageId>,
 
     /// All packages that are workspace members
     pub(crate) workspace_members: BTreeSet<PackageId>,
@@ -47,9 +36,14 @@ pub(crate) struct MetadataAnnotation {
 }
 
 impl MetadataAnnotation {
-    pub(crate) fn new(metadata: CargoMetadata) -> MetadataAnnotation {
+    pub(crate) fn new(metadata: CargoMetadata, config: &Config) -> MetadataAnnotation {
         // UNWRAP: The workspace metadata should be written by a controlled process. This should not return a result
-        let workspace_metadata = find_workspace_metadata(&metadata).unwrap_or_default();
+        let workspace_metadata = find_workspace_metadata(&metadata).unwrap_or_else(|| {
+            WorkspaceMetadata {
+                resolver_metadata: CargoResolver::new(&metadata).execute(&config.supported_platform_triples),
+                ..Default::default()
+            }
+        });
 
         let resolve = metadata
             .resolve
@@ -68,45 +62,19 @@ impl MetadataAnnotation {
             .map(|node| node.id.clone())
             .collect();
 
-        let crates = resolve
-            .nodes
-            .iter()
-            .map(|node| {
-                (
-                    node.id.clone(),
-                    Self::annotate_crate(
-                        node.clone(),
-                        &metadata,
-                        &workspace_metadata.tree_metadata,
-                    ),
-                )
-            })
-            .collect();
-
-        let packages = metadata
+        let packages: BTreeMap<_, _> = metadata
             .packages
             .into_iter()
             .map(|pkg| (pkg.id.clone(), pkg))
             .collect();
 
         MetadataAnnotation {
+            package_map: packages.values().map(|pkg| (pkg.into(), pkg.id.clone())).collect(),
             packages,
-            crates,
             workspace_members,
             workspace_root: PathBuf::from(metadata.workspace_root.as_std_path()),
             workspace_metadata,
         }
-    }
-
-    fn annotate_crate(
-        node: Node,
-        metadata: &CargoMetadata,
-        resolver_data: &TreeResolverMetadata,
-    ) -> CrateAnnotation {
-        // Gather all dependencies
-        let deps = DependencySet::new_for_node(&node, metadata, resolver_data);
-
-        CrateAnnotation { node, deps }
     }
 }
 
@@ -422,9 +390,6 @@ impl LockfileAnnotation {
 /// A pairing of a crate's package identifier to its annotations.
 #[derive(Debug)]
 pub(crate) struct PairedExtras {
-    /// The crate's package identifier
-    pub(crate) package_id: cargo_metadata::PackageId,
-
     /// The crate's annotations
     pub(crate) crate_extra: CrateAnnotations,
 }
@@ -461,15 +426,15 @@ impl Annotations {
         )?;
 
         // Annotate the cargo metadata
-        let metadata_annotation = MetadataAnnotation::new(cargo_metadata);
+        let metadata_annotation = MetadataAnnotation::new(cargo_metadata, &config);
 
         let mut unused_extra_annotations = config.annotations.clone();
 
         // Ensure each override matches a particular package
         let pairred_extras = metadata_annotation
             .packages
-            .iter()
-            .filter_map(|(pkg_id, pkg)| {
+            .values()
+            .filter_map(|pkg| {
                 let mut crate_extra: CrateAnnotations = config
                     .annotations
                     .iter()
@@ -491,10 +456,7 @@ impl Annotations {
                 } else {
                     Some((
                         CrateId::new(pkg.name.clone(), pkg.version.clone()),
-                        PairedExtras {
-                            package_id: pkg_id.clone(),
-                            crate_extra,
-                        },
+                        PairedExtras { crate_extra },
                     ))
                 }
             })
@@ -519,7 +481,8 @@ impl Annotations {
 }
 
 fn find_workspace_metadata(cargo_metadata: &CargoMetadata) -> Option<WorkspaceMetadata> {
-    WorkspaceMetadata::try_from(cargo_metadata.workspace_metadata.clone()).ok()
+    let value = cargo_metadata.workspace_metadata.as_object()?.get("cargo-bazel")?;
+    Some(serde_json::from_value(value.to_owned()).unwrap())
 }
 
 /// Determines whether or not a package is a workspace member. This follows
@@ -554,13 +517,10 @@ fn cargo_meta_pkg_to_locked_pkg<'a>(
 mod test {
     use super::*;
 
-    use semver::Version;
-    use serde_json::json;
-
     use crate::config::CrateNameAndVersionReq;
-    use crate::metadata::CargoTreeEntry;
     use crate::select::Select;
     use crate::test::*;
+    use crate::utils::target_triple::TargetTriple;
 
     #[test]
     fn test_cargo_meta_pkg_to_locked_pkg() {
@@ -572,13 +532,18 @@ mod test {
 
     #[test]
     fn annotate_metadata_with_aliases() {
-        let annotations = MetadataAnnotation::new(test::metadata::alias());
-        let log_crates: BTreeMap<&PackageId, &CrateAnnotation> = annotations
-            .crates
+        let annotations = MetadataAnnotation::new(test::metadata::alias(), &Config {
+            supported_platform_triples: BTreeSet::from_iter([
+                TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into()),
+            ]),
+            ..Default::default()
+        });
+        let log_crates: BTreeMap<_, _> = annotations
+            .workspace_metadata
+            .resolver_metadata
             .iter()
             .filter(|(id, _)| {
-                let pkg = &annotations.packages[*id];
-                pkg.name == "log"
+                id.name == "log"
             })
             .collect();
 
@@ -598,7 +563,7 @@ mod test {
 
     #[test]
     fn annotate_metadata_with_build_scripts() {
-        MetadataAnnotation::new(test::metadata::build_scripts());
+        MetadataAnnotation::new(test::metadata::build_scripts(), &Config::default());
     }
 
     #[test]
@@ -766,59 +731,5 @@ mod test {
             ..annotations
         };
         assert_eq!(*extras, expected);
-    }
-
-    #[test]
-    fn test_find_workspace_metadata() {
-        let mut metadata = metadata::common();
-        metadata.workspace_metadata = json!({
-            "cargo-bazel": {
-            "package_prefixes": {},
-            "sources": {},
-            "tree_metadata": {
-                "bitflags 1.3.2": {
-                    "common": {
-                        "features": [
-                            "default",
-                        ],
-                    },
-                    "selects": {
-                        "x86_64-unknown-linux-gnu": {
-                            "features": [
-                                "std",
-                            ],
-                            "deps": [
-                                "libc 1.2.3",
-                            ],
-                        },
-                    }
-                }
-            },
-        }
-        });
-
-        let mut select = Select::new();
-        select.insert(
-            CargoTreeEntry {
-                features: BTreeSet::from(["default".to_owned()]),
-                deps: BTreeSet::new(),
-            },
-            None,
-        );
-        select.insert(
-            CargoTreeEntry {
-                features: BTreeSet::from(["std".to_owned()]),
-                deps: BTreeSet::from([CrateId::new("libc".to_owned(), Version::new(1, 2, 3))]),
-            },
-            Some("x86_64-unknown-linux-gnu".to_owned()),
-        );
-        let expected = TreeResolverMetadata::from([(
-            CrateId::new("bitflags".to_owned(), Version::new(1, 3, 2)),
-            select,
-        )]);
-
-        let result = find_workspace_metadata(&metadata).unwrap();
-
-        assert_eq!(expected, result.tree_metadata);
     }
 }

@@ -129,7 +129,7 @@ mod test {
 
     #[test]
     fn resolve_no_targeted() {
-        let mut deps: Select<BTreeSet<CrateDependency>> = Select::default();
+        let mut deps = Select::default();
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
@@ -160,6 +160,8 @@ mod test {
             extra_aliased_targets: BTreeMap::default(),
             alias_rule: None,
             override_targets: BTreeMap::default(),
+            crate_features: BTreeMap::default(),
+            feature_dep_maps: None,
         };
 
         let configurations =
@@ -188,7 +190,7 @@ mod test {
     }
 
     fn mock_resolve_context(configuration: String) -> CrateContext {
-        let mut deps: Select<BTreeSet<CrateDependency>> = Select::default();
+        let mut deps = Select::default();
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
@@ -219,6 +221,8 @@ mod test {
             extra_aliased_targets: BTreeMap::default(),
             alias_rule: None,
             override_targets: BTreeMap::default(),
+            crate_features: BTreeMap::default(),
+            feature_dep_maps: None,
         }
     }
 
@@ -275,7 +279,7 @@ mod test {
     #[test]
     fn resolve_platforms() {
         let configuration = r#"x86_64-unknown-linux-gnu"#.to_owned();
-        let mut deps: Select<BTreeSet<CrateDependency>> = Select::default();
+        let mut deps = Select::default();
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
@@ -306,6 +310,8 @@ mod test {
             extra_aliased_targets: BTreeMap::default(),
             alias_rule: None,
             override_targets: BTreeMap::default(),
+            crate_features: BTreeMap::default(),
+            feature_dep_maps: None,
         };
 
         let configurations =
@@ -342,7 +348,7 @@ mod test {
     #[test]
     fn resolve_unsupported_targeted() {
         let configuration = r#"cfg(target = "x86_64-unknown-unknown")"#.to_owned();
-        let mut deps: Select<BTreeSet<CrateDependency>> = Select::default();
+        let mut deps = Select::default();
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
@@ -373,6 +379,8 @@ mod test {
             extra_aliased_targets: BTreeMap::default(),
             alias_rule: None,
             override_targets: BTreeMap::default(),
+            crate_features: BTreeMap::default(),
+            feature_dep_maps: None,
         };
 
         let configurations =
