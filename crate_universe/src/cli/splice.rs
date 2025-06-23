@@ -9,7 +9,9 @@ use itertools::Itertools;
 
 use crate::cli::Result;
 use crate::config::Config;
-use crate::metadata::{write_metadata, Cargo, CargoResolver, CargoUpdateRequest, Generator, MetadataGenerator};
+use crate::metadata::{
+    write_metadata, Cargo, CargoResolver, CargoUpdateRequest, Generator, MetadataGenerator,
+};
 use crate::splicing::{
     generate_lockfile, Splicer, SplicerKind, SplicingManifest, WorkspaceMetadata,
 };
