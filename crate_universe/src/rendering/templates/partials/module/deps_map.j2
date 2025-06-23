@@ -32,17 +32,9 @@
     {%- elif deps_type in ["proc-macro-dev"] %}
     {%- set_global features_set = workspace_member.feature_dep_maps | get(key="proc_macro_deps_dev", default=default_feature_map) %}
     {%- elif deps_type in ["build"] %}
-        {%- if workspace_member | get(key="build_script_attrs", default=Null) %}
-        {%- set_global features_set = workspace_member.build_script_attrs | get(key="deps", default=default_feature_map) %}
-        {%- else %}
-        {%- set_global features_set = default_feature_map %}
-        {%- endif %}
+    {%- set_global features_set = workspace_member.feature_dep_maps | get(key="build_deps", default=default_feature_map) %}
     {%- elif deps_type in ["build-proc-macro"] %}
-        {%- if workspace_member | get(key="build_script_attrs", default=Null) %}
-        {%- set_global features_set = workspace_member.build_script_attrs | get(key="proc_macro_deps", default=default_feature_map) %}
-        {%- else %}
-        {%- set_global features_set = default_feature_map %}
-        {%- endif %}
+    {%- set_global features_set = workspace_member.feature_dep_maps | get(key="build_proc_macro_deps", default=default_feature_map) %}
     {%- else %}
     {{ throw(message= "Unexpected dependency type '" ~ deps_type ~ "' for '" ~ id ~ "'") }}
     {%- endif %}

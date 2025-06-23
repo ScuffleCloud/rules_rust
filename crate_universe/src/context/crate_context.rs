@@ -4,14 +4,18 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use camino::Utf8PathBuf;
 use cargo_metadata::{Package, PackageId};
+use cargo_platform::Platform;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::config::{AliasRule, CrateId, GenBinaries};
-use crate::metadata::{Dependency, MetadataAnnotation, PairedExtras, SourceAnnotation};
+use crate::metadata::{
+    CrateAnnotation, Dependency, MetadataAnnotation, PairedExtras, SourceAnnotation,
+};
 use crate::select::Select;
 use crate::utils::sanitize_module_name;
 use crate::utils::starlark::{Glob, Label};
+use crate::utils::target_triple::TargetTriple;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CrateDependency {
@@ -93,6 +97,9 @@ impl Rule {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default)]
 pub(crate) struct CommonAttributes {
+    #[serde(skip_serializing_if = "BTreeSet::is_empty")]
+    pub(crate) build_targets: BTreeSet<TargetTriple>,
+
     #[serde(skip_serializing_if = "Select::is_empty")]
     pub(crate) compile_data: Select<BTreeSet<Label>>,
 
@@ -158,15 +165,6 @@ pub struct DepFeatureMap {
     pub(crate) optional: BTreeMap<String, Select<BTreeSet<CrateDependency>>>,
 }
 
-impl From<Select<BTreeSet<CrateDependency>>> for DepFeatureMap {
-    fn from(value: Select<BTreeSet<CrateDependency>>) -> Self {
-        Self {
-            required: value,
-            optional: BTreeMap::new(),
-        }
-    }
-}
-
 impl DepFeatureMap {
     pub(crate) fn is_empty(&self) -> bool {
         self.required.is_empty() && self.optional.is_empty()
@@ -176,6 +174,7 @@ impl DepFeatureMap {
 impl Default for CommonAttributes {
     fn default() -> Self {
         Self {
+            build_targets: Default::default(),
             compile_data: Default::default(),
             // Generated targets include all files in their package by default
             compile_data_glob: BTreeSet::from(["**".to_owned()]),
@@ -416,10 +415,110 @@ pub struct DepFeatureMaps {
     pub(crate) build_link_deps: DepFeatureMap,
 }
 
+fn resolve_items<'a, U, I: IntoIterator<Item = (U, Option<String>)> + 'a>(
+    items: &'a BTreeMap<TargetTriple, CrateAnnotation>,
+    transform: impl Fn(&'a CrateAnnotation) -> I,
+) -> Select<BTreeSet<U>>
+where
+    BTreeSet<U>: crate::select::Selectable<ItemType = U>,
+{
+    items
+        .iter()
+        .fold(Select::new(), |mut select, (triple, annotation)| {
+            for (item, config) in transform(annotation) {
+                select.insert(item, Some(config.unwrap_or_else(|| triple.to_bazel())));
+            }
+
+            select
+        })
+}
+
+fn new_feature_map<'a, I: IntoIterator<Item = &'a Dependency> + 'a>(
+    metadata: &MetadataAnnotation,
+    items: &'a BTreeMap<TargetTriple, CrateAnnotation>,
+    features_by_dep: &HashMap<&str, BTreeSet<&str>>,
+    new_crate_dep: impl Fn(&'a Dependency) -> Option<CrateDependency>,
+    transform: impl Fn(&'a CrateAnnotation) -> I,
+) -> DepFeatureMap {
+    type FeatureBuilder<'a> =
+        BTreeMap<&'a CrateId, BTreeMap<&'a TargetTriple, BTreeSet<&'a Platform>>>;
+    let mut optional: BTreeMap<_, FeatureBuilder> = BTreeMap::new();
+    let mut required: FeatureBuilder = BTreeMap::new();
+    let mut id_to_crate_dep = BTreeMap::new();
+
+    items.into_iter().for_each(|(config, annotation)| {
+        for dep in transform(annotation) {
+            let Some(crate_dep) = new_crate_dep(dep) else {
+                continue;
+            };
+
+            id_to_crate_dep.insert(&dep.id, crate_dep);
+            if dep.optional {
+                let pkg = &metadata.packages[&metadata.package_map[&dep.id]];
+
+                features_by_dep
+                    .get(dep.alias.as_deref().unwrap_or(&pkg.name))
+                    .into_iter()
+                    .flatten()
+                    .copied()
+                    .for_each(|feature| {
+                        optional
+                            .entry(feature)
+                            .or_default()
+                            .entry(&dep.id)
+                            .or_default()
+                            .entry(config)
+                            .or_default()
+                            .extend(dep.platforms.iter());
+                    });
+            } else {
+                required
+                    .entry(&dep.id)
+                    .or_default()
+                    .entry(config)
+                    .or_default()
+                    .extend(dep.platforms.iter())
+            }
+        }
+    });
+
+    let into_select = |map: FeatureBuilder| {
+        let mut select = Select::new();
+        map.into_iter().for_each(|(id, targets)| {
+            if items
+                .keys()
+                .all(|key| targets.get(key).is_some_and(|p| p.is_empty()))
+            {
+                select.insert(id_to_crate_dep[id].clone(), None);
+            } else {
+                for (target, platforms) in targets {
+                    if platforms.is_empty() {
+                        select.insert(id_to_crate_dep[id].clone(), Some(target.to_bazel()));
+                    } else {
+                        for platform in platforms {
+                            select.insert(id_to_crate_dep[id].clone(), Some(platform.to_string()));
+                        }
+                    }
+                }
+            }
+        });
+        select
+    };
+
+    DepFeatureMap {
+        required: into_select(required),
+        optional: optional
+            .into_iter()
+            .map(|(feature, opt)| (feature.to_string(), into_select(opt)))
+            .collect(),
+    }
+}
+
 impl CrateContext {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        crate_id: &CrateId,
+        package: &Package,
+        annotations: &BTreeMap<TargetTriple, CrateAnnotation>,
         metadata: &MetadataAnnotation,
         source_annotations: &BTreeMap<PackageId, SourceAnnotation>,
         extras: &BTreeMap<CrateId, PairedExtras>,
@@ -428,61 +527,77 @@ impl CrateContext {
         sources_are_present: bool,
         build_feature_maps: bool,
     ) -> anyhow::Result<Self> {
-        let package = &metadata.packages[&metadata.package_map[crate_id]];
+        let crate_id = CrateId::from(package);
+
         let new_crate_dep = |dep: &Dependency| {
             // Unfortunately, The package graph and resolve graph of cargo metadata have different representations
             // for the crate names (resolve graph sanitizes names to match module names) so to get the rest of this
             // content to align when rendering, the dependency target needs to be explicitly sanitized.
             let target = sanitize_module_name(&dep.target_name);
+            let pkg = &metadata.packages[&metadata.package_map[&dep.id]];
+            if metadata.workspace_members.contains(&pkg.id) {
+                return None;
+            }
 
-            CrateDependency {
+            Some(CrateDependency {
                 id: dep.id.clone(),
                 target,
                 alias: dep.alias.clone(),
-                local_path: match source_annotations.get(&metadata.package_map[&dep.id]) {
+                local_path: match source_annotations.get(&pkg.id) {
                     Some(SourceAnnotation::Path { path }) => Some(path.clone()),
                     _ => None,
                 },
-            }
+            })
         };
 
-        let resolved_items = metadata.workspace_metadata.resolver_metadata.get(&crate_id).as_ref().map(|r| r.items()).unwrap_or_default();
+        fn map_deps<'a>(
+            deps: &'a BTreeSet<Dependency>,
+            new_crate_dep: impl Fn(&Dependency) -> Option<CrateDependency> + 'a,
+        ) -> impl Iterator<Item = (CrateDependency, Option<String>)> + 'a {
+            deps.iter().flat_map(move |dep| {
+                new_crate_dep(dep).into_iter().flat_map(|cdep| {
+                    dep.platforms
+                        .is_empty()
+                        .then_some((cdep.clone(), None))
+                        .into_iter()
+                        .chain(
+                            dep.platforms
+                                .iter()
+                                .map(move |p| (cdep.clone(), Some(p.to_string()))),
+                        )
+                })
+            })
+        }
 
         // Convert the dependencies into renderable strings
-        let deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-            item.deps.iter().map(new_crate_dep).for_each(|value| {
-                select.insert(value, config.clone());
-            });
-            select
+        let deps = resolve_items(&annotations, |item| map_deps(&item.deps, new_crate_dep));
+        let deps_dev = resolve_items(&annotations, |item| map_deps(&item.deps_dev, new_crate_dep));
+        let proc_macro_deps = resolve_items(&annotations, |item| {
+            map_deps(&item.proc_macro_deps, new_crate_dep)
         });
-        let deps_dev = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-            item.deps_dev.iter().map(new_crate_dep).for_each(|value| {
-                select.insert(value, config.clone());
-            });
-            select
+        let proc_macro_deps_dev = resolve_items(&annotations, |item| {
+            map_deps(&item.proc_macro_deps_dev, new_crate_dep)
         });
-        let proc_macro_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-            item.proc_macro_deps.iter().map(new_crate_dep).for_each(|value| {
-                select.insert(value, config.clone());
-            });
-            select
-        });
-        let proc_macro_deps_dev = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-            item.proc_macro_deps_dev.iter().map(new_crate_dep).for_each(|value| {
-                select.insert(value, config.clone());
-            });
-            select
-        });
+        let crate_features = {
+            let mut intersection = annotations.values().map(|v| v.features.clone()).next().unwrap_or_default();
 
-        let crate_features = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-            item.features.iter().for_each(|value| {
-                select.insert(value.clone(), config.clone());
+            annotations.values().for_each(|annotation| {
+                intersection.retain(|v| annotation.features.contains(v))
             });
+
+            let mut select = Select::from_value(intersection);
+            for (triple, annotation) in annotations {
+                annotation.features.iter().for_each(|feature| {
+                    select.insert(feature.clone(), Some(triple.to_bazel()));
+                });
+            }
+
             select
-        });
+        };
 
         // Gather all "common" attributes
         let mut common_attrs = CommonAttributes {
+            build_targets: annotations.keys().cloned().collect(),
             crate_features,
             deps,
             deps_dev,
@@ -543,37 +658,30 @@ impl CrateContext {
         });
 
         let build_script_attrs = if let Some(target) = build_script_target {
-            // Track the build script dependency
-            common_attrs.deps.insert(
-                CrateDependency {
-                    id: crate_id.clone(),
-                    target: target.crate_name.clone(),
-                    alias: None,
-                    local_path: match source_annotations.get(&package.id) {
-                        Some(SourceAnnotation::Path { path }) => Some(path.clone()),
-                        _ => None,
+            if !metadata.workspace_members.contains(&package.id) {
+                // Track the build script dependency
+                common_attrs.deps.insert(
+                    CrateDependency {
+                        id: crate_id.clone(),
+                        target: target.crate_name.clone(),
+                        alias: None,
+                        local_path: match source_annotations.get(&package.id) {
+                            Some(SourceAnnotation::Path { path }) => Some(path.clone()),
+                            _ => None,
+                        },
                     },
-                },
-                None,
-            );
+                    None,
+                );
+            }
 
-            let build_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-                item.build_deps.iter().map(new_crate_dep).for_each(|value| {
-                    select.insert(value, config.clone());
-                });
-                select
+            let build_deps = resolve_items(&annotations, |item| {
+                map_deps(&item.build_deps, new_crate_dep)
             });
-            let build_link_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-                item.build_link_deps.iter().map(new_crate_dep).for_each(|value| {
-                    select.insert(value, config.clone());
-                });
-                select
+            let build_link_deps = resolve_items(&annotations, |item| {
+                map_deps(&item.build_link_deps, new_crate_dep)
             });
-            let build_proc_macro_deps = resolved_items.iter().fold(Select::new(), |mut select, (config, item)| {
-                item.build_proc_macro_deps.iter().map(new_crate_dep).for_each(|value| {
-                    select.insert(value, config.clone());
-                });
-                select
+            let build_proc_macro_deps = resolve_items(&annotations, |item| {
+                map_deps(&item.build_proc_macro_deps, new_crate_dep)
             });
 
             Some(BuildScriptAttributes {
@@ -626,64 +734,61 @@ impl CrateContext {
                                 }
                             })
                         })
-                        .map(|dep| (feature.as_str(), dep))
+                        .map(|dep| (dep, feature.as_str()))
                 })
                 .into_grouping_map()
                 .collect::<BTreeSet<_>>();
 
-            fn new_feature_map(metadata: &MetadataAnnotation, items: impl IntoIterator<Item = (Option<String>, CrateDependency, bool)>, features_by_dep: &HashMap<&str, BTreeSet<&str>>) -> DepFeatureMap {
-                let mut deps = DepFeatureMap::default();
-    
-                for (config, crate_dep, optional) in items {
-                    if optional {
-                        let pkg = &metadata.packages[&metadata.package_map[&crate_dep.id]];
-
-    
-                        features_by_dep
-                            .get(
-                                crate_dep.alias
-                                    .as_deref()
-                                    .unwrap_or(&pkg.name),
-                            )
-                            .into_iter()
-                            .flatten()
-                            .copied()
-                            .for_each(|feature| {
-                                deps.optional
-                                    .entry(feature.to_string())
-                                    .or_default()
-                                    .insert(crate_dep.clone(), config.clone());
-                            });
-                    } else {
-                        deps.required.insert(crate_dep.clone(), config.clone());
-                    }
-                }
-    
-                deps
-            }
-
             Some(DepFeatureMaps {
-                deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                deps_dev: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.deps_dev.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                proc_macro_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.proc_macro_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                proc_macro_deps_dev: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.proc_macro_deps_dev.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                build_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.build_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                build_proc_macro_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.build_proc_macro_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
-                build_link_deps: new_feature_map(&metadata, resolved_items.iter().flat_map(|(config, item)| {
-                    item.build_link_deps.iter().map(|dep| (config.clone(), new_crate_dep(dep), dep.optional))
-                }), &features_by_dep),
+                deps: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.deps,
+                ),
+                deps_dev: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.deps_dev,
+                ),
+                proc_macro_deps: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.proc_macro_deps,
+                ),
+                proc_macro_deps_dev: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.proc_macro_deps_dev,
+                ),
+                build_deps: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.build_deps,
+                ),
+                build_proc_macro_deps: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.build_proc_macro_deps,
+                ),
+                build_link_deps: new_feature_map(
+                    &metadata,
+                    annotations,
+                    &features_by_dep,
+                    new_crate_dep,
+                    |item| &item.build_link_deps,
+                ),
             })
         } else {
             None
@@ -1064,12 +1169,18 @@ mod test {
     #[test]
     fn new_context() {
         let annotations = common_annotations();
+        let id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            &CrateId::new("common".to_owned(), Version::new(0, 1, 0)),
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1095,11 +1206,11 @@ mod test {
     fn context_with_overrides() {
         let annotations = common_annotations();
 
-        let crate_id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
+        let id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
 
         let mut pairred_extras = BTreeMap::new();
         pairred_extras.insert(
-            crate_id.clone(),
+            id.clone(),
             PairedExtras {
                 crate_extra: CrateAnnotations {
                     gen_binaries: Some(GenBinaries::All),
@@ -1113,7 +1224,12 @@ mod test {
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            &crate_id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &pairred_extras,
@@ -1172,16 +1288,18 @@ mod test {
     fn context_with_build_script() {
         let annotations = build_script_annotations();
 
-        let crate_id = CrateId::new(
-            "openssl-sys".into(),
-            Version::new(0, 9, 87),
-        );
+        let id = CrateId::new("openssl-sys".into(), Version::new(0, 9, 87));
 
         let include_binaries = false;
         let include_build_scripts = true;
         let are_sources_present = false;
         let context = CrateContext::new(
-            &crate_id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1218,16 +1336,18 @@ mod test {
     fn context_disabled_build_script() {
         let annotations = build_script_annotations();
 
-        let crate_id = CrateId::new(
-            "openssl-sys".into(),
-            Version::new(0, 9, 87),
-        );
+        let id = CrateId::new("openssl-sys".into(), Version::new(0, 9, 87));
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            &crate_id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1254,16 +1374,18 @@ mod test {
     fn context_rlib_crate_type() {
         let annotations = crate_type_annotations();
 
-        let crate_id = CrateId::new(
-            "sysinfo".into(),
-            Version::new(0, 22, 5),
-        );
+        let id = CrateId::new("sysinfo".into(), Version::new(0, 22, 5));
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let context = CrateContext::new(
-            &crate_id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1294,12 +1416,25 @@ mod test {
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
-        set_package(annotations.metadata.packages.get_mut(&PackageId {
-            repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
-        }).unwrap());
+        set_package(
+            annotations
+                .metadata
+                .packages
+                .get_mut(&PackageId {
+                    repr: "path+file://{TEMP_DIR}/common#0.1.0".to_owned(),
+                })
+                .unwrap(),
+        );
+
+        let id = CrateId::new("common".into(), Version::new(0, 1, 0));
 
         let context = CrateContext::new(
-            &CrateId::new("common".into(), Version::new(0, 1, 0)),
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1418,7 +1553,7 @@ mod test {
                     features: BTreeSet::from_iter(["unique_feature".to_owned()]),
                     ..Default::default()
                 },
-                None
+                None,
             );
 
         let include_binaries = false;
@@ -1426,7 +1561,12 @@ mod test {
         let are_sources_present = false;
 
         let context = CrateContext::new(
-            &id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1454,13 +1594,18 @@ mod test {
         )
         .unwrap();
 
-        let crate_id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
+        let id = CrateId::new("common".to_owned(), Version::new(0, 1, 0));
 
         let include_binaries = false;
         let include_build_scripts = false;
         let are_sources_present = false;
         let err = CrateContext::new(
-            &crate_id,
+            annotations
+                .metadata
+                .packages
+                .values()
+                .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
