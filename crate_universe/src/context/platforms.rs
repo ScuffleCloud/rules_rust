@@ -10,13 +10,13 @@ use crate::utils::target_triple::TargetTriple;
 /// Walk through all dependencies in a [CrateContext] list for all configuration specific
 /// dependencies to produce a mapping of configurations/Cargo target_triples to compatible
 /// Bazel target_triples.  Also adds mappings for all known target_triples.
-pub(crate) fn resolve_cfg_platforms(
-    crates: Vec<&CrateContext>,
+pub(crate) fn resolve_cfg_platforms<'a>(
+    crates: impl IntoIterator<Item = &'a CrateContext>,
     supported_platform_triples: &BTreeSet<TargetTriple>,
 ) -> Result<BTreeMap<String, BTreeSet<TargetTriple>>> {
     // Collect all unique configurations from all dependencies into a single set
     let configurations: BTreeSet<String> = crates
-        .iter()
+        .into_iter()
         .flat_map(|ctx| {
             let attr = &ctx.common_attrs;
             let mut configurations = BTreeSet::new();
@@ -30,6 +30,22 @@ pub(crate) fn resolve_cfg_platforms(
             if let Some(attr) = &ctx.build_script_attrs {
                 configurations.extend(attr.deps.configurations());
                 configurations.extend(attr.proc_macro_deps.configurations());
+            }
+
+            if let Some(feature_maps) = &ctx.feature_dep_maps {
+                configurations.extend(
+                    IntoIterator::into_iter([
+                        &feature_maps.build_deps,
+                        &feature_maps.build_link_deps,
+                        &feature_maps.build_proc_macro_deps,
+                        &feature_maps.deps,
+                        &feature_maps.deps_dev,
+                        &feature_maps.proc_macro_deps,
+                        &feature_maps.proc_macro_deps_dev,
+                    ])
+                    .flat_map(|c| c.optional.values().chain(Some(&c.required)))
+                    .flat_map(|s| s.configurations()),
+                )
             }
 
             configurations

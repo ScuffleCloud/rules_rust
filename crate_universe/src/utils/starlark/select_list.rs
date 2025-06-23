@@ -1,22 +1,25 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
 
+use itertools::Itertools;
 use serde::ser::{SerializeMap, SerializeTupleStruct, Serializer};
 use serde::Serialize;
 use serde_starlark::{FunctionCall, MULTILINE};
 
+use crate::rendering::Platforms;
 use crate::select::{Select, SelectableValue};
 use crate::utils::starlark::serialize::MultilineArray;
 use crate::utils::starlark::{
     looks_like_bazel_configuration_label, NoMatchingPlatformTriples, WithOriginalConfigurations,
 };
+use crate::utils::target_triple::TargetTriple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SelectList<T>
 where
     T: SelectableValue,
 {
-    common: Vec<T>,
+    common: Vec<WithOriginalConfigurations<T>>,
     selects: BTreeMap<String, Vec<WithOriginalConfigurations<T>>>,
     // Elements from the `Select` whose configuration did not get mapped to any
     // new configuration. They could be ignored, but are preserved here to
@@ -33,9 +36,18 @@ where
     /// configurations in the output SelectList.
     pub(crate) fn new(
         select: Select<Vec<T>>,
-        platforms: &BTreeMap<String, BTreeSet<String>>,
+        supported_targets: &BTreeSet<TargetTriple>,
+        platforms: &Platforms,
     ) -> Self {
         let (common, selects) = select.into_parts();
+
+        let mut common = common
+            .into_iter()
+            .map(|value| WithOriginalConfigurations {
+                value,
+                original_configurations: BTreeSet::new(),
+            })
+            .collect_vec();
 
         // Map new configuration -> WithOriginalConfigurations(value, old configuration).
         let mut remapped: BTreeMap<String, Vec<WithOriginalConfigurations<T>>> = BTreeMap::new();
@@ -43,7 +55,7 @@ where
         let mut unmapped: BTreeMap<String, Vec<T>> = BTreeMap::new();
 
         for (original_configuration, values) in selects {
-            match platforms.get(&original_configuration) {
+            match platforms.label_matcher.get(&original_configuration) {
                 Some(configurations) => {
                     for configuration in configurations {
                         for value in &values {
@@ -78,6 +90,47 @@ where
                 }
             }
         }
+
+        if !supported_targets.is_empty()
+            && supported_targets
+                .iter()
+                .all(|p| remapped.contains_key(&platforms.targets[p]))
+        {
+            let mut intersection = remapped.values().next().cloned().unwrap();
+
+            for select in remapped.values().skip(1) {
+                intersection.retain(|i| select.iter().any(|v| i.value == v.value));
+                if intersection.is_empty() {
+                    break;
+                }
+
+                select.into_iter().for_each(|v| {
+                    if let Some(idx) = intersection.iter().position(|i| i.value == v.value) {
+                        intersection[idx]
+                            .original_configurations
+                            .extend(v.original_configurations.iter().cloned());
+                    }
+                });
+            }
+
+            if !intersection.is_empty() {
+                common.extend(intersection);
+                remapped.retain(|_, select| {
+                    select.retain(|v| common.iter().all(|c| c.value != v.value));
+
+                    !select.is_empty()
+                });
+            }
+        }
+
+        remapped
+            .values_mut()
+            .flatten()
+            .chain(common.iter_mut())
+            .for_each(|v| {
+                v.original_configurations
+                    .retain(|c| !platforms.targets.contains_key(c));
+            });
 
         Self {
             common,
@@ -322,7 +375,10 @@ mod test {
         let select_list = SelectList::new(select, &platforms);
 
         let expected = SelectList {
-            common: Vec::from(["dep-d".to_owned()]),
+            common: Vec::from([WithOriginalConfigurations {
+                value: "dep-d".to_owned(),
+                original_configurations: BTreeSet::new(),
+            }]),
             selects: BTreeMap::from([
                 (
                     "x86_64-macos".to_owned(),
