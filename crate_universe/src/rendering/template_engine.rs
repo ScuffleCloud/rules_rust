@@ -177,7 +177,7 @@ impl TemplateEngine {
     ) -> Result<String> {
         let mut context = self.new_tera_ctx();
         context.insert("context", data);
-        context.insert("platforms", platforms);
+        context.insert("platforms", &platforms.label_matcher);
         context.insert("generator", &generator);
 
         self.engine

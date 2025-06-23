@@ -16,10 +16,10 @@ use cargo_toml::Manifest;
 use serde::{Deserialize, Serialize};
 
 use crate::config::CrateId;
-use crate::metadata::{Cargo, CargoUpdateRequest, LockGenerator, CrateAnnotation};
-use crate::select::Select;
+use crate::metadata::{Cargo, CargoUpdateRequest, CrateAnnotation, LockGenerator};
 use crate::utils;
 use crate::utils::starlark::Label;
+use crate::utils::target_triple::TargetTriple;
 
 use self::cargo_config::CargoConfig;
 use self::crate_index_lookup::CrateIndexLookup;
@@ -172,7 +172,7 @@ pub(crate) struct WorkspaceMetadata {
     pub(crate) package_prefixes: BTreeMap<String, String>,
 
     /// Information about the package / feature selection
-    pub(crate) resolver_metadata: BTreeMap<CrateId, Select<CrateAnnotation>>,
+    pub(crate) resolver_metadata: BTreeMap<CrateId, BTreeMap<TargetTriple, CrateAnnotation>>,
 }
 
 impl TryFrom<toml::Value> for WorkspaceMetadata {
@@ -242,7 +242,7 @@ impl WorkspaceMetadata {
     pub(crate) fn write_registry_urls_and_feature_map(
         cargo: &Cargo,
         lockfile: &cargo_lock::Lockfile,
-        resolver_data: BTreeMap<CrateId, Select<CrateAnnotation>>,
+        resolver_data: BTreeMap<CrateId, BTreeMap<TargetTriple, CrateAnnotation>>,
         input_manifest_path: &Utf8Path,
         output_manifest_path: &Utf8Path,
     ) -> Result<()> {

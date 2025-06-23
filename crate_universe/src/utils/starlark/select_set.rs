@@ -5,11 +5,13 @@ use serde::ser::{SerializeMap, SerializeTupleStruct, Serializer};
 use serde::Serialize;
 use serde_starlark::{FunctionCall, MULTILINE};
 
+use crate::rendering::Platforms;
 use crate::select::{Select, SelectableOrderedValue};
 use crate::utils::starlark::serialize::MultilineArray;
 use crate::utils::starlark::{
     looks_like_bazel_configuration_label, NoMatchingPlatformTriples, WithOriginalConfigurations,
 };
+use crate::utils::target_triple::TargetTriple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SelectSet<T>
@@ -17,7 +19,7 @@ where
     T: SelectableOrderedValue,
 {
     // Invariant: any T in `common` is not anywhere in `selects`.
-    common: BTreeSet<T>,
+    common: BTreeSet<WithOriginalConfigurations<T>>,
     // Invariant: none of the sets are empty.
     selects: BTreeMap<String, BTreeSet<WithOriginalConfigurations<T>>>,
     // Elements from the `Select` whose configuration did not get mapped to any
@@ -35,9 +37,14 @@ where
     /// configurations in the output SelectSet.
     pub(crate) fn new(
         select: Select<BTreeSet<T>>,
-        platforms: &BTreeMap<String, BTreeSet<String>>,
+        supported_targets: &BTreeSet<TargetTriple>,
+        platforms: &Platforms,
     ) -> Self {
         let (common, selects) = select.into_parts();
+        let mut common: BTreeMap<_, _> = common
+            .into_iter()
+            .map(|value| (value, BTreeSet::new()))
+            .collect();
 
         // Map new configuration -> value -> old configurations.
         let mut remapped: BTreeMap<String, BTreeMap<T, BTreeSet<String>>> = BTreeMap::new();
@@ -45,7 +52,7 @@ where
         let mut unmapped: BTreeMap<String, BTreeSet<T>> = BTreeMap::new();
 
         for (original_configuration, values) in selects {
-            match platforms.get(&original_configuration) {
+            match platforms.label_matcher.get(&original_configuration) {
                 Some(configurations) => {
                     for configuration in configurations {
                         for value in &values {
@@ -78,8 +85,55 @@ where
             }
         }
 
+        if !supported_targets.is_empty()
+            && supported_targets
+                .iter()
+                .all(|p| remapped.contains_key(&platforms.targets[p]))
+        {
+            let mut intersection = remapped.values().next().cloned().unwrap();
+
+            for select in remapped.values().skip(1) {
+                intersection.retain(|k, _| select.contains_key(k));
+                if intersection.is_empty() {
+                    break;
+                }
+
+                select.into_iter().for_each(|(k, v)| {
+                    if let Some(configs) = intersection.get_mut(k) {
+                        configs.extend(v.iter().cloned());
+                    }
+                });
+            }
+
+            if !intersection.is_empty() {
+                remapped.retain(|_, select| {
+                    select.retain(|k, _| !intersection.contains_key(k));
+
+                    !select.is_empty()
+                });
+
+                intersection.into_iter().for_each(|(k, v)| {
+                    common.entry(k).or_default().extend(v);
+                });
+            }
+        }
+
+        remapped
+            .values_mut()
+            .flat_map(|v| v.values_mut())
+            .chain(common.values_mut())
+            .for_each(|v| {
+                v.retain(|c| !platforms.targets.contains_key(c));
+            });
+
         Self {
-            common,
+            common: common
+                .into_iter()
+                .map(|(k, v)| WithOriginalConfigurations {
+                    value: k,
+                    original_configurations: v,
+                })
+                .collect(),
             selects: remapped
                 .into_iter()
                 .map(|(new_configuration, value_to_original_configuration)| {
@@ -336,7 +390,10 @@ mod test {
         let select_set = SelectSet::new(select, &platforms);
 
         let expected = SelectSet {
-            common: BTreeSet::from(["dep-d".to_owned()]),
+            common: BTreeSet::from([WithOriginalConfigurations {
+                value: "dep-d".to_owned(),
+                original_configurations: BTreeSet::new(),
+            }]),
             selects: BTreeMap::from([
                 (
                     "x86_64-macos".to_owned(),

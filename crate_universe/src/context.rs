@@ -68,19 +68,23 @@ impl Context {
             .values()
             .filter_map(|package| {
                 let id = CrateId::from(package);
+
                 CrateContext::new(
-                    &id,
+                    package,
+                    annotations
+                        .metadata
+                        .workspace_metadata
+                        .resolver_metadata
+                        .get(&id)?,
                     &annotations.metadata,
                     &annotations.lockfile.crates,
                     &annotations.pairred_extras,
                     annotations.config.generate_binaries,
                     annotations.config.generate_build_scripts,
                     sources_are_present,
-                    annotations
-                        .metadata
-                        .workspace_members
-                        .contains(&package.id),
-                ).map(|ctx| Some((id, ctx)))
+                    annotations.metadata.workspace_members.contains(&package.id),
+                )
+                .map(|ctx| Some((id, ctx)))
                 .transpose()
             })
             .collect::<Result<_, _>>()?;
@@ -97,7 +101,7 @@ impl Context {
         // Given a list of all conditional dependencies, build a set of platform
         // triples which satisfy the conditions.
         let conditions = resolve_cfg_platforms(
-            crates.values().collect(),
+            crates.values(),
             &annotations.config.supported_platform_triples,
         )?;
 
@@ -133,13 +137,28 @@ impl Context {
         for id in &annotations.metadata.workspace_members {
             let id = CrateId::from(&annotations.metadata.packages[id]);
             let krate = &crates[&id];
-            direct_deps.extend(krate.common_attrs.deps.items().into_iter().map(|item| item.1.id));
-            direct_deps.extend(krate.common_attrs.proc_macro_deps.items().into_iter().map(|item| item.1.id));
-            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.deps.items().into_iter().map(|item| item.1.id)));
-            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.link_deps.items().into_iter().map(|item| item.1.id)));
-            direct_deps.extend(krate.build_script_attrs.as_ref().into_iter().flat_map(|build| build.proc_macro_deps.items().into_iter().map(|item| item.1.id)));
-            direct_dev_deps.extend(krate.common_attrs.deps_dev.items().into_iter().map(|item| item.1.id));
-            direct_dev_deps.extend(krate.common_attrs.proc_macro_deps_dev.items().into_iter().map(|item| item.1.id));
+            IntoIterator::into_iter([
+                &krate.common_attrs.deps,
+                &krate.common_attrs.proc_macro_deps,
+            ])
+            .chain(
+                krate
+                    .build_script_attrs
+                    .as_ref()
+                    .into_iter()
+                    .flat_map(|build| [&build.deps, &build.proc_macro_deps, &build.link_deps]),
+            )
+            .for_each(|direct| {
+                direct_deps.extend(direct.values().into_iter().map(|i| i.id));
+            });
+
+            IntoIterator::into_iter([
+                &krate.common_attrs.deps_dev,
+                &krate.common_attrs.proc_macro_deps_dev,
+            ])
+            .for_each(|direct| {
+                direct_dev_deps.extend(direct.values().into_iter().map(|i| i.id));
+            });
         }
 
         let unused_patches = annotations.lockfile.unused_patches;
@@ -293,9 +312,8 @@ mod test {
     fn mock_context_common() -> Context {
         let mut metadata = crate::test::metadata::common();
 
-        let resolved = CargoResolver::new(&metadata).execute([
-            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into())
-        ]);
+        let resolved = CargoResolver::new(&metadata)
+            .execute([TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into())]);
 
         metadata.workspace_metadata = serde_json::json!({
             "cargo-bazel": WorkspaceMetadata {
@@ -319,9 +337,9 @@ mod test {
     fn mock_context_aliases() -> Context {
         let mut metadata = crate::test::metadata::alias();
 
-        let resolver_metadata = CargoResolver::new(&metadata).execute([
-            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".to_owned())
-        ]);
+        let resolver_metadata = CargoResolver::new(&metadata).execute([TargetTriple::from_bazel(
+            "x86_64-unknown-linux-gnu".to_owned(),
+        )]);
 
         metadata.workspace_metadata = serde_json::json!({
             "cargo-bazel": WorkspaceMetadata {
@@ -345,9 +363,9 @@ mod test {
     fn mock_context_workspace_build_scripts_deps() -> Context {
         let mut metadata = crate::test::metadata::workspace_build_scripts_deps();
 
-        let resolver_metadata = CargoResolver::new(&metadata).execute([
-            TargetTriple::from_bazel("x86_64-unknown-linux-gnu".to_owned())
-        ]);
+        let resolver_metadata = CargoResolver::new(&metadata).execute([TargetTriple::from_bazel(
+            "x86_64-unknown-linux-gnu".to_owned(),
+        )]);
 
         metadata.workspace_metadata = serde_json::json!({
             "cargo-bazel": WorkspaceMetadata {
@@ -420,7 +438,6 @@ mod test {
                 .map(|dep| (&dep.id, context.has_duplicate_workspace_member_dep_by_alias(dep)))
                 .collect::<Vec<_>>(),
             [
-                (&CrateId::new("child".to_owned(), Version::new(0, 1, 0)), false),
                 (&CrateId::new("tonic".to_owned(), Version::new(0, 4, 3)), false),
                 (&CrateId::new("tonic-build".to_owned(), Version::new(0, 4, 2)), false),
             ],

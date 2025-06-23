@@ -38,12 +38,12 @@ pub(crate) struct MetadataAnnotation {
 impl MetadataAnnotation {
     pub(crate) fn new(metadata: CargoMetadata, config: &Config) -> MetadataAnnotation {
         // UNWRAP: The workspace metadata should be written by a controlled process. This should not return a result
-        let workspace_metadata = find_workspace_metadata(&metadata).unwrap_or_else(|| {
-            WorkspaceMetadata {
-                resolver_metadata: CargoResolver::new(&metadata).execute(&config.supported_platform_triples),
+        let workspace_metadata =
+            find_workspace_metadata(&metadata).unwrap_or_else(|| WorkspaceMetadata {
+                resolver_metadata: CargoResolver::new(&metadata)
+                    .execute(&config.supported_platform_triples),
                 ..Default::default()
-            }
-        });
+            });
 
         let resolve = metadata
             .resolve
@@ -69,7 +69,10 @@ impl MetadataAnnotation {
             .collect();
 
         MetadataAnnotation {
-            package_map: packages.values().map(|pkg| (pkg.into(), pkg.id.clone())).collect(),
+            package_map: packages
+                .values()
+                .map(|pkg| (pkg.into(), pkg.id.clone()))
+                .collect(),
             packages,
             workspace_members,
             workspace_root: PathBuf::from(metadata.workspace_root.as_std_path()),
@@ -481,7 +484,10 @@ impl Annotations {
 }
 
 fn find_workspace_metadata(cargo_metadata: &CargoMetadata) -> Option<WorkspaceMetadata> {
-    let value = cargo_metadata.workspace_metadata.as_object()?.get("cargo-bazel")?;
+    let value = cargo_metadata
+        .workspace_metadata
+        .as_object()?
+        .get("cargo-bazel")?;
     Some(serde_json::from_value(value.to_owned()).unwrap())
 }
 
@@ -532,19 +538,20 @@ mod test {
 
     #[test]
     fn annotate_metadata_with_aliases() {
-        let annotations = MetadataAnnotation::new(test::metadata::alias(), &Config {
-            supported_platform_triples: BTreeSet::from_iter([
-                TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into()),
-            ]),
-            ..Default::default()
-        });
+        let annotations = MetadataAnnotation::new(
+            test::metadata::alias(),
+            &Config {
+                supported_platform_triples: BTreeSet::from_iter([TargetTriple::from_bazel(
+                    "x86_64-unknown-linux-gnu".into(),
+                )]),
+                ..Default::default()
+            },
+        );
         let log_crates: BTreeMap<_, _> = annotations
             .workspace_metadata
             .resolver_metadata
             .iter()
-            .filter(|(id, _)| {
-                id.name == "log"
-            })
+            .filter(|(id, _)| id.name == "log")
             .collect();
 
         assert_eq!(log_crates.len(), 2);

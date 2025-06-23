@@ -280,7 +280,7 @@ def collect_deps(
             owner = getattr(crate_info, "owner", dep.label if type(dep) == "Target" else None)
 
             direct_crates.append(AliasableDepInfo(
-                name = aliases.get(owner, crate_info.name),
+                name = aliases.get(owner, crate_info.name).replace("-", "_"),
                 dep = crate_info,
             ))
 

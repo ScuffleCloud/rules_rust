@@ -65,7 +65,11 @@ fn setup_cargo_env(rfiles: &runfiles::Runfiles) -> Result<(PathBuf, PathBuf)> {
     Ok((cargo, rustc))
 }
 
-fn run(repository_name: &str, manifests: HashMap<String, String>, lockfile: &str) -> cargo_metadata::Metadata {
+fn run(
+    repository_name: &str,
+    manifests: HashMap<String, String>,
+    lockfile: &str,
+) -> cargo_metadata::Metadata {
     let scratch = tempfile::tempdir().unwrap();
     let runfiles = runfiles::Runfiles::create().unwrap();
 
@@ -728,7 +732,9 @@ fn feature_generator_workspace() {
         "rules_rust/crate_universe/test_data/metadata/workspace/Cargo.lock",
     );
 
-    assert!(!metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["wgpu 0.14.0"].is_null());
+    assert!(
+        !metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["wgpu 0.14.0"].is_null()
+    );
 }
 
 #[test]
@@ -755,7 +761,7 @@ fn feature_generator_crate_combined_features() {
     );
 
     // serde appears twice in the list of dependencies, with and without derive features
-    
+
     assert_eq!(
         json!({
             "common": {
@@ -963,50 +969,50 @@ fn resolver_2_deps() {
 
     assert_eq!(
         json!({
-            // Note linux is not present since linux has no unique dependencies or features
-            // for this crate.
-            "common": {},
-            "selects": {
-              "wasm32-unknown-unknown": {
-                "deps": [
-                  {
-                    "features": [],
-                    "id": "js-sys 0.3.69",
-                    "target_name": "js_sys"
-                  },
-                  {
-                    "features": [
-                      "default"
-                    ],
-                    "id": "wasm-bindgen 0.2.92",
-                    "target_name": "wasm_bindgen"
-                  }
-                ]
-              },
-              "x86_64-apple-darwin": {
-                "deps": [
-                  {
-                    "features": [
-                      "default"
-                    ],
-                    "id": "core-foundation-sys 0.8.6",
-                    "target_name": "core_foundation_sys"
-                  }
-                ]
-              },
-              "x86_64-pc-windows-msvc": {
-                "deps": [
-                  {
-                    "features": [
-                      "default"
-                    ],
-                    "id": "windows-core 0.52.0",
-                    "target_name": "windows_core"
-                  }
-                ]
-              }
+          // Note linux is not present since linux has no unique dependencies or features
+          // for this crate.
+          "common": {},
+          "selects": {
+            "wasm32-unknown-unknown": {
+              "deps": [
+                {
+                  "features": [],
+                  "id": "js-sys 0.3.69",
+                  "target_name": "js_sys"
+                },
+                {
+                  "features": [
+                    "default"
+                  ],
+                  "id": "wasm-bindgen 0.2.92",
+                  "target_name": "wasm_bindgen"
+                }
+              ]
+            },
+            "x86_64-apple-darwin": {
+              "deps": [
+                {
+                  "features": [
+                    "default"
+                  ],
+                  "id": "core-foundation-sys 0.8.6",
+                  "target_name": "core_foundation_sys"
+                }
+              ]
+            },
+            "x86_64-pc-windows-msvc": {
+              "deps": [
+                {
+                  "features": [
+                    "default"
+                  ],
+                  "id": "windows-core 0.52.0",
+                  "target_name": "windows_core"
+                }
+              ]
             }
-          }),
+          }
+        }),
         metadata.workspace_metadata["cargo-bazel"]["resolver_metadata"]["iana-time-zone 0.1.60"],
     );
 }

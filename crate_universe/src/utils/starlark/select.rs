@@ -22,9 +22,13 @@ where
     where
         S: Serializer,
     {
-        let comment =
-            Vec::from_iter(self.original_configurations.iter().map(String::as_str)).join(", ");
-        LineComment::new(&self.value, &comment).serialize(serializer)
+        if self.original_configurations.is_empty() {
+            self.value.serialize(serializer)
+        } else {
+            let comment =
+                Vec::from_iter(self.original_configurations.iter().map(String::as_str)).join(", ");
+            LineComment::new(&self.value, &comment).serialize(serializer)
+        }
     }
 }
 

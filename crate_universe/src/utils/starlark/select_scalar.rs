@@ -5,17 +5,19 @@ use serde::ser::{SerializeMap, Serializer};
 use serde::Serialize;
 use serde_starlark::{FunctionCall, MULTILINE};
 
+use crate::rendering::Platforms;
 use crate::select::{Select, SelectableScalar};
 use crate::utils::starlark::{
     looks_like_bazel_configuration_label, NoMatchingPlatformTriples, WithOriginalConfigurations,
 };
+use crate::utils::target_triple::TargetTriple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SelectScalar<T>
 where
     T: SelectableScalar,
 {
-    common: Option<T>,
+    common: Option<WithOriginalConfigurations<T>>,
     selects: BTreeMap<String, WithOriginalConfigurations<T>>,
     // Elements from the `Select` whose configuration did not get mapped to any
     // new configuration. They could be ignored, but are preserved here to
@@ -30,8 +32,17 @@ where
     /// Re-keys the provided Select by the given configuration mapping.
     /// This mapping maps from configurations in the input Select to sets of
     /// configurations in the output SelectScalar.
-    pub(crate) fn new(select: Select<T>, platforms: &BTreeMap<String, BTreeSet<String>>) -> Self {
+    pub(crate) fn new(
+        select: Select<T>,
+        supported_targets: &BTreeSet<TargetTriple>,
+        platforms: &Platforms,
+    ) -> Self {
         let (common, selects) = select.into_parts();
+
+        let mut common = common.map(|value| WithOriginalConfigurations {
+            value,
+            original_configurations: BTreeSet::new(),
+        });
 
         // Map new configuration -> WithOriginalConfigurations(value, old configurations).
         let mut remapped: BTreeMap<String, WithOriginalConfigurations<T>> = BTreeMap::new();
@@ -39,7 +50,7 @@ where
         let mut unmapped: BTreeMap<String, T> = BTreeMap::new();
 
         for (original_configuration, value) in selects {
-            match platforms.get(&original_configuration) {
+            match platforms.label_matcher.get(&original_configuration) {
                 Some(configurations) => {
                     for configuration in configurations {
                         remapped
@@ -68,6 +79,44 @@ where
                 }
             }
         }
+
+        if common.is_none()
+            && !supported_targets.is_empty()
+            && supported_targets
+                .iter()
+                .all(|p| remapped.contains_key(&platforms.targets[p]))
+        {
+            let mut intersection = remapped.values().next().cloned();
+
+            for select in remapped.values().skip(if common.is_some() { 0 } else { 1 }) {
+                if intersection
+                    .as_ref()
+                    .is_some_and(|v| v.value == select.value)
+                {
+                    intersection
+                        .as_mut()
+                        .unwrap()
+                        .original_configurations
+                        .extend(select.original_configurations.iter().cloned());
+                } else {
+                    intersection = None;
+                    break;
+                }
+            }
+
+            if let Some(intersection) = intersection {
+                common = Some(intersection);
+                remapped.clear();
+            }
+        }
+
+        remapped
+            .values_mut()
+            .chain(common.iter_mut())
+            .for_each(|v| {
+                v.original_configurations
+                    .retain(|c| !platforms.targets.contains_key(c));
+            });
 
         Self {
             common,
