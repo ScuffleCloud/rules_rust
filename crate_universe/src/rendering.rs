@@ -28,7 +28,10 @@ use crate::utils::{self, sanitize_repository_name};
 
 // Configuration remapper used to convert from cfg expressions like "cfg(unix)"
 // to platform labels like "@rules_rust//rust/platform:x86_64-unknown-linux-gnu".
-pub(crate) type Platforms = BTreeMap<String, BTreeSet<String>>;
+pub(crate) struct Platforms {
+    pub label_matcher: BTreeMap<String, BTreeSet<String>>,
+    pub targets: BTreeMap<TargetTriple, String>,
+}
 
 pub(crate) struct Renderer {
     config: Arc<RenderConfig>,
@@ -88,24 +91,39 @@ impl Renderer {
     pub(crate) fn render_platform_labels(
         &self,
         conditions: Arc<BTreeMap<String, BTreeSet<TargetTriple>>>,
-    ) -> BTreeMap<String, BTreeSet<String>> {
-        conditions
-            .iter()
-            .map(|(cfg, target_triples)| {
-                (
-                    cfg.clone(),
-                    target_triples
-                        .iter()
-                        .map(|target_triple| {
-                            render_platform_constraint_label(
-                                &self.config.platforms_template,
-                                target_triple,
-                            )
-                        })
-                        .collect(),
-                )
-            })
-            .collect()
+    ) -> Platforms {
+        Platforms {
+            label_matcher: conditions
+                .iter()
+                .map(|(cfg, target_triples)| {
+                    (
+                        cfg.clone(),
+                        target_triples
+                            .iter()
+                            .map(|target_triple| {
+                                render_platform_constraint_label(
+                                    &self.config.platforms_template,
+                                    target_triple,
+                                )
+                            })
+                            .collect(),
+                    )
+                })
+                .collect(),
+            targets: conditions
+                .values()
+                .flatten()
+                .map(|target_triple| {
+                    (
+                        target_triple.clone(),
+                        render_platform_constraint_label(
+                            &self.config.platforms_template,
+                            target_triple,
+                        ),
+                    )
+                })
+                .collect(),
+        }
     }
 
     fn render_crates_module(
@@ -547,11 +565,16 @@ impl Renderer {
             //
             // This is set to a short name to avoid long path name issues on windows.
             name: "_bs".to_string(),
-            aliases: SelectDict::new(self.make_aliases(krate, true, false), platforms),
+            aliases: SelectDict::new(
+                self.make_aliases(krate, true, false),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             build_script_env: SelectDict::new(
                 attrs
                     .map(|attrs| attrs.build_script_env.clone())
                     .unwrap_or_default(),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             use_default_shell_env: krate
@@ -559,6 +582,7 @@ impl Renderer {
                 .as_ref()
                 .and_then(|a| a.use_default_shell_env),
             compile_data: make_data_with_exclude(
+                &krate.common_attrs.build_targets,
                 platforms,
                 attrs
                     .map(|attrs| attrs.compile_data_glob.clone())
@@ -570,10 +594,15 @@ impl Renderer {
                     .map(|attrs| attrs.compile_data.clone())
                     .unwrap_or_default(),
             ),
-            crate_features: SelectSet::new(krate.common_attrs.crate_features.clone(), platforms),
+            crate_features: SelectSet::new(
+                krate.common_attrs.crate_features.clone(),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             crate_name: utils::sanitize_module_name(&target.crate_name),
             crate_root: target.crate_root.clone(),
             data: make_data(
+                &krate.common_attrs.build_targets,
                 platforms,
                 attrs
                     .map(|attrs| attrs.data_glob.clone())
@@ -588,6 +617,7 @@ impl Renderer {
                         .map(|attrs| attrs.extra_deps.clone())
                         .unwrap_or_default(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             link_deps: SelectSet::new(
@@ -599,6 +629,7 @@ impl Renderer {
                         .map(|attrs| attrs.extra_link_deps.clone())
                         .unwrap_or_default(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             edition: krate.common_attrs.edition.clone(),
@@ -614,22 +645,26 @@ impl Renderer {
                         .map(|attrs| attrs.extra_proc_macro_deps.clone())
                         .unwrap_or_default(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             rundir: SelectScalar::new(
                 attrs.map(|attrs| attrs.rundir.clone()).unwrap_or_default(),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             rustc_env: SelectDict::new(
                 attrs
                     .map(|attrs| attrs.rustc_env.clone())
                     .unwrap_or_default(),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             rustc_env_files: SelectSet::new(
                 attrs
                     .map(|attrs| attrs.rustc_env_files.clone())
                     .unwrap_or_default(),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             rustc_flags: SelectList::new(
@@ -643,6 +678,7 @@ impl Renderer {
                         .map(|attrs| attrs.rustc_flags.clone())
                         .unwrap_or_default(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             srcs: target.srcs.clone(),
@@ -657,6 +693,7 @@ impl Renderer {
             },
             tools: SelectSet::new(
                 attrs.map(|attrs| attrs.tools.clone()).unwrap_or_default(),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             toolchains: attrs.map_or_else(BTreeSet::new, |attrs| attrs.toolchains.clone()),
@@ -678,6 +715,7 @@ impl Renderer {
                     krate.common_attrs.deps.clone(),
                     krate.common_attrs.extra_deps.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             proc_macro_deps: SelectSet::new(
@@ -685,9 +723,14 @@ impl Renderer {
                     krate.common_attrs.proc_macro_deps.clone(),
                     krate.common_attrs.extra_proc_macro_deps.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
-            aliases: SelectDict::new(self.make_aliases(krate, false, false), platforms),
+            aliases: SelectDict::new(
+                self.make_aliases(krate, false, false),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             common: self.make_common_attrs(platforms, krate, target)?,
         })
     }
@@ -705,6 +748,7 @@ impl Renderer {
                     krate.common_attrs.deps.clone(),
                     krate.common_attrs.extra_deps.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             proc_macro_deps: SelectSet::new(
@@ -712,9 +756,14 @@ impl Renderer {
                     krate.common_attrs.proc_macro_deps.clone(),
                     krate.common_attrs.extra_proc_macro_deps.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
-            aliases: SelectDict::new(self.make_aliases(krate, false, false), platforms),
+            aliases: SelectDict::new(
+                self.make_aliases(krate, false, false),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             common: self.make_common_attrs(platforms, krate, target)?,
             disable_pipelining: krate.disable_pipelining,
         })
@@ -739,16 +788,21 @@ impl Renderer {
                         None,
                     );
                 }
-                SelectSet::new(deps, platforms)
+                SelectSet::new(deps, &krate.common_attrs.build_targets, platforms)
             },
             proc_macro_deps: SelectSet::new(
                 self.make_deps(
                     krate.common_attrs.proc_macro_deps.clone(),
                     krate.common_attrs.extra_proc_macro_deps.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
-            aliases: SelectDict::new(self.make_aliases(krate, false, false), platforms),
+            aliases: SelectDict::new(
+                self.make_aliases(krate, false, false),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             common: self.make_common_attrs(platforms, krate, target)?,
         })
     }
@@ -761,14 +815,20 @@ impl Renderer {
     ) -> Result<CommonAttrs> {
         Ok(CommonAttrs {
             compile_data: make_data(
+                &krate.common_attrs.build_targets,
                 platforms,
                 krate.common_attrs.compile_data_glob.clone(),
                 krate.common_attrs.compile_data_glob_excludes.clone(),
                 krate.common_attrs.compile_data.clone(),
             ),
-            crate_features: SelectSet::new(krate.common_attrs.crate_features.clone(), platforms),
+            crate_features: SelectSet::new(
+                krate.common_attrs.crate_features.clone(),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             crate_root: target.crate_root.clone(),
             data: make_data(
+                &krate.common_attrs.build_targets,
                 platforms,
                 krate.common_attrs.data_glob.clone(),
                 Default::default(),
@@ -776,8 +836,16 @@ impl Renderer {
             ),
             edition: krate.common_attrs.edition.clone(),
             linker_script: krate.common_attrs.linker_script.clone(),
-            rustc_env: SelectDict::new(krate.common_attrs.rustc_env.clone(), platforms),
-            rustc_env_files: SelectSet::new(krate.common_attrs.rustc_env_files.clone(), platforms),
+            rustc_env: SelectDict::new(
+                krate.common_attrs.rustc_env.clone(),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
+            rustc_env_files: SelectSet::new(
+                krate.common_attrs.rustc_env_files.clone(),
+                &krate.common_attrs.build_targets,
+                platforms,
+            ),
             rustc_flags: SelectList::new(
                 // In most cases, warnings in 3rd party crates are not
                 // interesting as they're out of the control of consumers. The
@@ -787,6 +855,7 @@ impl Renderer {
                     Select::from_value(Vec::from(["--cap-lints=allow".to_owned()])),
                     krate.common_attrs.rustc_flags.clone(),
                 ),
+                &krate.common_attrs.build_targets,
                 platforms,
             ),
             srcs: target.srcs.clone(),
@@ -801,14 +870,11 @@ impl Renderer {
             },
             target_compatible_with: self.config.generate_target_compatible_with.then(|| {
                 TargetCompatibleWith::new(
-                    self.supported_platform_triples
+                    krate
+                        .common_attrs
+                        .build_targets
                         .iter()
-                        .map(|target_triple| {
-                            render_platform_constraint_label(
-                                &self.config.platforms_template,
-                                target_triple,
-                            )
-                        })
+                        .map(|target_triple| platforms.targets[target_triple].clone())
                         .collect(),
                 )
             }),
@@ -988,6 +1054,7 @@ fn render_build_file_template(template: &str, name: &str, version: &str) -> Resu
 }
 
 fn make_data_with_exclude(
+    supported_targets: &BTreeSet<TargetTriple>,
     platforms: &Platforms,
     include: BTreeSet<String>,
     exclude: BTreeSet<String>,
@@ -1012,17 +1079,18 @@ fn make_data_with_exclude(
                 .chain(exclude)
                 .collect(),
         },
-        select: SelectSet::new(select, platforms),
+        select: SelectSet::new(select, supported_targets, platforms),
     }
 }
 
 fn make_data(
+    supported_targets: &BTreeSet<TargetTriple>,
     platforms: &Platforms,
     glob: BTreeSet<String>,
     excludes: BTreeSet<String>,
     select: Select<BTreeSet<Label>>,
 ) -> Data {
-    make_data_with_exclude(platforms, glob, excludes, select)
+    make_data_with_exclude(supported_targets, platforms, glob, excludes, select)
 }
 
 #[cfg(test)]

@@ -1,4 +1,7 @@
-use std::fmt::{Display, Formatter, Result};
+use std::{
+    borrow::Borrow,
+    fmt::{Display, Formatter, Result},
+};
 
 use serde::{Deserialize, Serialize};
 
@@ -22,6 +25,12 @@ impl TargetTriple {
         // for the purposes of determining `cargo metadata`, resolving `cfg`
         // targets, etc.
         self.0.replace("nixos", "linux")
+    }
+}
+
+impl Borrow<String> for TargetTriple {
+    fn borrow(&self) -> &String {
+        &self.0
     }
 }
 

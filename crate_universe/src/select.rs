@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Debug;
 
@@ -24,7 +23,6 @@ where
 
     fn is_empty(this: &Select<Self>) -> bool;
     fn insert(this: &mut Select<Self>, value: Self::ItemType, configuration: Option<String>);
-    fn optimize(this: &mut Select<Self>);
 
     fn items(this: &Select<Self>) -> Vec<(Option<String>, Self::ItemType)>;
     fn values(this: &Select<Self>) -> Vec<Self::ItemType>;
@@ -109,27 +107,8 @@ where
         (self.common, self.selects)
     }
 
-    pub(crate) fn optimize(&mut self, targets: impl IntoIterator<Item = impl Borrow<str>>) {
-        if targets.into_iter().any(|t| !self.selects.contains_key(t.borrow())) {
-            return;
-        }
-        T::optimize(self);
-    }
-
     pub(crate) fn merge(lhs: Self, rhs: Self) -> Self {
         T::merge(lhs, rhs)
-    }
-
-    pub(crate) fn common(&self) -> &T::CommonType {
-        &self.common
-    }
-
-    pub(crate) fn selects(&self) -> &BTreeMap<String, T::SelectsType> {
-        &self.selects
-    }
-
-    pub(crate) fn as_mut(&mut self) -> (&mut T::CommonType, &mut BTreeMap<String, T::SelectsType>) {
-        (&mut self.common, &mut self.selects)
     }
 }
 
@@ -224,8 +203,6 @@ where
         }
     }
 
-    fn optimize(_: &mut Select<Self>) {}
-
     fn merge(lhs: Select<Self>, rhs: Select<Self>) -> Select<Self> {
         let mut result: Select<Self> = Select::new();
 
@@ -269,28 +246,6 @@ where
                 .map(|value| (Some(configuration.clone()), value.clone()))
         }));
         result
-    }
-
-    fn optimize(this: &mut Select<Self>) {
-        let Some(first) = this.selects.iter().next() else {
-            return;
-        };
-
-        let mut intersection = first.1.clone();
-        for select in this.selects.values().skip(1) {
-            intersection.retain(|v| select.contains(v));
-        }
-
-        if intersection.is_empty() {
-            return;
-        }
-
-        this.selects.retain(|_, value| {
-            value.retain(|i| !intersection.contains(i));
-            !value.is_empty()
-        });
-
-        this.common.extend(intersection);
     }
 
     fn values(this: &Select<Self>) -> Vec<Self::ItemType> {
@@ -358,28 +313,6 @@ where
                 .map(|value| (Some(configuration.clone()), value.clone()))
         }));
         result
-    }
-
-    fn optimize(this: &mut Select<Self>) {
-        let Some(intersection) = this.selects.values().next() else {
-            return;
-        };
-
-        let mut intersection = intersection.clone();
-        for values in this.selects.values() {
-            intersection.retain(|i| values.contains(i));
-        }
-
-        if intersection.is_empty() {
-            return;
-        }
-
-        this.selects.retain(|_, value| {
-            value.retain(|i| !intersection.contains(i));
-            !value.is_empty()
-        });
-
-        this.common.extend(intersection);
     }
 
     fn values(this: &Select<Self>) -> Vec<Self::ItemType> {
@@ -484,28 +417,6 @@ where
                 .map(|(key, value)| (Some(configuration.clone()), (key.clone(), value.clone())))
         }));
         result
-    }
-
-    fn optimize(this: &mut Select<Self>) {
-        let Some(intersection) = this.selects.values().next() else {
-            return;
-        };
-
-        let mut intersection = intersection.clone();
-        for values in this.selects.values() {
-            intersection.retain(|key, value| values.get(key).is_some_and(|v| v == value));
-        }
-
-        if intersection.is_empty() {
-            return;
-        }
-
-        this.selects.retain(|_, value| {
-            value.retain(|k, value| intersection.get(k).is_some_and(|v| v == value));
-            !value.is_empty()
-        });
-
-        this.common.extend(intersection);
     }
 
     fn values(this: &Select<Self>) -> Vec<Self::ItemType> {
