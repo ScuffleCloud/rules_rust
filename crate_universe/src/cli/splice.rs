@@ -8,7 +8,9 @@ use clap::Parser;
 
 use crate::cli::Result;
 use crate::config::Config;
-use crate::metadata::{write_metadata, Cargo, CargoResolver, CargoUpdateRequest, Generator, MetadataGenerator};
+use crate::metadata::{
+    write_metadata, Cargo, CargoResolver, CargoUpdateRequest, Generator, MetadataGenerator,
+};
 use crate::splicing::{generate_lockfile, Splicer, SplicingManifest, WorkspaceMetadata};
 
 /// Command line options for the `splice` subcommand

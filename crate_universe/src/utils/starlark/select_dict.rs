@@ -5,10 +5,12 @@ use serde::ser::{SerializeMap, Serializer};
 use serde::Serialize;
 use serde_starlark::{FunctionCall, MULTILINE};
 
+use crate::rendering::Platforms;
 use crate::select::{Select, SelectableOrderedValue, SelectableValue};
 use crate::utils::starlark::{
     looks_like_bazel_configuration_label, NoMatchingPlatformTriples, WithOriginalConfigurations,
 };
+use crate::utils::target_triple::TargetTriple;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SelectDict<U, T>
@@ -17,7 +19,7 @@ where
     T: SelectableValue,
 {
     // Invariant: keys in this map are not in any of the inner maps of `selects`.
-    common: BTreeMap<U, T>,
+    common: BTreeMap<U, WithOriginalConfigurations<T>>,
     // Invariant: none of the inner maps are empty.
     selects: BTreeMap<String, BTreeMap<U, WithOriginalConfigurations<T>>>,
     // Elements from the `Select` whose configuration did not get mapped to any
@@ -36,9 +38,23 @@ where
     /// of configurations in the output SelectDict.
     pub(crate) fn new(
         select: Select<BTreeMap<U, T>>,
-        platforms: &BTreeMap<String, BTreeSet<String>>,
+        supported_targets: &BTreeSet<TargetTriple>,
+        platforms: &Platforms,
     ) -> Self {
         let (common, selects) = select.into_parts();
+
+        let mut common: BTreeMap<_, _> = common
+            .into_iter()
+            .map(|(k, v)| {
+                (
+                    k,
+                    WithOriginalConfigurations {
+                        value: v,
+                        original_configurations: BTreeSet::new(),
+                    },
+                )
+            })
+            .collect();
 
         // Map new configuration -> WithOriginalConfigurations(value, old configurations).
         let mut remapped: BTreeMap<String, BTreeMap<U, WithOriginalConfigurations<T>>> =
@@ -47,7 +63,7 @@ where
         let mut unmapped: BTreeMap<String, BTreeMap<U, T>> = BTreeMap::new();
 
         for (original_configuration, entries) in selects {
-            match platforms.get(&original_configuration) {
+            match platforms.label_matcher.get(&original_configuration) {
                 Some(configurations) => {
                     for configuration in configurations {
                         for (key, value) in &entries {
@@ -87,6 +103,51 @@ where
                 }
             }
         }
+
+        if !supported_targets.is_empty()
+            && supported_targets
+                .iter()
+                .all(|p| remapped.contains_key(&platforms.targets[p]))
+        {
+            let mut intersection = remapped.values().next().cloned().unwrap();
+
+            for select in remapped.values().skip(1) {
+                intersection.retain(|k, _| select.contains_key(k));
+                if intersection.is_empty() {
+                    break;
+                }
+
+                select.into_iter().for_each(|(k, v)| {
+                    if intersection.get(k).is_none_or(|i| v.value != i.value) {
+                        intersection.remove(k);
+                    } else {
+                        intersection
+                            .get_mut(k)
+                            .unwrap()
+                            .original_configurations
+                            .extend(v.original_configurations.iter().cloned());
+                    }
+                });
+            }
+
+            if !intersection.is_empty() {
+                common.extend(intersection);
+                remapped.retain(|_, select| {
+                    select.retain(|k, v| common.get(k).is_none_or(|c| c.value != v.value));
+
+                    !select.is_empty()
+                });
+            }
+        }
+
+        remapped
+            .values_mut()
+            .flat_map(|v| v.values_mut())
+            .chain(common.values_mut())
+            .for_each(|v| {
+                v.original_configurations
+                    .retain(|c| !platforms.targets.contains_key(c));
+            });
 
         Self {
             common,
@@ -166,7 +227,7 @@ where
                     #[derive(Serialize)]
                     #[serde(untagged)]
                     enum Either<'a, T> {
-                        Common(&'a T),
+                        Common(&'a WithOriginalConfigurations<T>),
                         Selects(&'a WithOriginalConfigurations<T>),
                     }
 
@@ -381,7 +442,13 @@ mod test {
         let select_dict = SelectDict::new(select, &platforms);
 
         let expected = SelectDict {
-            common: BTreeMap::from([("dep-d".to_string(), "d".to_owned())]),
+            common: BTreeMap::from([(
+                "dep-d".to_string(),
+                WithOriginalConfigurations {
+                    value: "d".to_owned(),
+                    original_configurations: BTreeSet::new(),
+                },
+            )]),
             selects: BTreeMap::from([
                 (
                     "x86_64-macos".to_owned(),

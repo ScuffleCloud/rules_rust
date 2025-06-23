@@ -41,7 +41,7 @@ def _flatten_features(features, enabled_features):
     Returns:
         set: A set of all enabled features
     """
-    resolved = set([])
+    resolved = set()
     queue = list(enabled_features)
 
     for _ in range(10000):
@@ -90,26 +90,27 @@ def _flatten_dependency_maps(all_dependency_maps, enabled_features_map):
         dict: A dictionary as described above
     """
     dependencies = {}
-    common_features = set(enabled_features_map.get(_COMMON_CONDITION, []))
+    feature_conditions = {
+        _COMMON_CONDITION: set(enabled_features_map.get(_COMMON_CONDITION, set())),
+    }
+
+    for condition, feature in enabled_features_map.items():
+        for condition in _CONDITIONS.get(condition, []):
+            feature_conditions.setdefault(condition, set()).update(feature)
 
     for feature_deps_map in all_dependency_maps:
         for feature, conditional_deps_map in feature_deps_map.items():
             for condition, deps_map in conditional_deps_map.items():
-                if feature != _REQUIRED_FEATURE and feature not in common_features and feature not in enabled_features_map.get(condition, []):
-                    continue
+                condition_flags = _CONDITIONS[condition] if condition != _COMMON_CONDITION else feature_conditions.keys()
+                for condition in condition_flags:
+                    if feature == _REQUIRED_FEATURE or feature in feature_conditions.get(_COMMON_CONDITION, set()) or feature in feature_conditions.get(condition, set()):
+                        dependencies.setdefault(condition, dict()).update(deps_map)
 
-                # If the condition has not been recorded, do so and continue
-                if condition not in dependencies:
-                    dependencies.setdefault(condition, dict(deps_map.items()))
-                    continue
-
-                # Alert on any miss-matched dependencies
-                inconsistent_entries = []
-                for crate_name, crate_label in deps_map.items():
-                    existing = dependencies[condition].get(crate_name)
-                    if existing and existing != crate_label:
-                        inconsistent_entries.append((crate_name, existing, crate_label))
-                    dependencies[condition].update({crate_name: crate_label})
+    if _COMMON_CONDITION in dependencies:
+        for cond, v in dependencies.items():
+            if cond != _COMMON_CONDITION:
+                for k in dependencies[_COMMON_CONDITION]:
+                    v.pop(k, default=None)
 
     return dependencies
 
@@ -126,21 +127,21 @@ def _make_crate_features(package_name = {{ default_package_name }}):
             conditions = conditions,
             **vtable
         )
-    
+
     def feature_map_add(other):
         if other:
             type_other = type(other)
-            if type_other == 'list' or type_other == 'set':
+            if type_other == "list" or type_other == "set":
                 conditions.setdefault(_COMMON_CONDITION, set()).update(other)
-            elif type_other == 'dict':
+            elif type_other == "dict":
                 for key, value in other.items():
                     conditions.setdefault(key, set()).update(value)
-            elif hasattr(other, '_type') and other._type == 'FeatureMap':
+            elif hasattr(other, "_type") and other._type == "FeatureMap":
                 for key, value in other.conditions.items():
                     conditions.setdefault(key, set()).update(value)
             else:
                 fail("unsupported add operation between FeatureMap and %s" % type_other)
-        
+
         return make_set()
 
     def feature_map_flatten():
@@ -164,19 +165,22 @@ def _make_crate_features(package_name = {{ default_package_name }}):
 
     def feature_map_get(condition, default = None):
         return conditions.get(condition, default)
+    def feature_map_items():
+        return conditions.items()
 
-    vtable['add'] = feature_map_add
-    vtable['select'] = feature_map_select
-    vtable['flatten'] = feature_map_flatten
-    vtable['get'] = feature_map_get
+    vtable["add"] = feature_map_add
+    vtable["select"] = feature_map_select
+    vtable["flatten"] = feature_map_flatten
+    vtable["get"] = feature_map_get
+    vtable["items"] = feature_map_items
 
     return make_set()
 
 def crate_features(
-    all = False,
-    additional = None,
-    default = True,
-    package_name = {{ default_package_name }}):
+        all = False,
+        additional = None,
+        default = True,
+        package_name = {{ default_package_name }}):
     """Resolves the features for a crate
 
     Args:
@@ -196,7 +200,7 @@ def crate_features(
     features = _make_crate_features().add(additional)
 
     if all:
-        features.add(_FEATURE_FLAGS.get(package_name, []))
+        features.add(_FEATURE_FLAGS.get(package_name, []).keys())
 
     if default:
         features.add(_RESOLVED_FEATURE_FLAGS.get(package_name, {}))
@@ -325,11 +329,14 @@ def all_crate_deps(
     dependencies = _flatten_dependency_maps(all_dependency_maps, features)
 
     crate_deps = list(dependencies.pop(_COMMON_CONDITION, {}).values())
-    for condition, deps in dependencies.items():
-        crate_deps += selects.with_or({
-            tuple(_CONDITIONS[condition]): deps.values(),
-            "//conditions:default": [],
-        })
+    if dependencies:
+        select_statement = {
+            "//conditions:default": []
+        }
+        for condition, deps in dependencies.items():
+            select_statement[condition] = deps.values()
+
+        crate_deps += select(select_statement)
 
     return crate_deps
 
@@ -401,19 +408,14 @@ def aliases(
     common_items = aliases.pop(_COMMON_CONDITION, {}).items()
 
     # If there are only common items in the dictionary, immediately return them
-    if not len(aliases.keys()) == 1:
+    if not aliases:
         return dict(common_items)
 
     # Build a single select statement where each conditional has accounted for the
     # common set of aliases.
     crate_aliases = {"//conditions:default": dict(common_items)}
     for condition, deps in aliases.items():
-        condition_triples = _CONDITIONS[condition]
-        for triple in condition_triples:
-            if triple in crate_aliases:
-                crate_aliases[triple].update(deps)
-            else:
-                crate_aliases.update({triple: dict(deps.items() + common_items)})
+        crate_aliases[condition] = dict(deps.items() + common_items)
 
     return select(crate_aliases)
 

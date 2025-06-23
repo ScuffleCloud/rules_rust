@@ -13,8 +13,8 @@ use clap::Parser;
 
 use crate::config::{Config, VendorMode};
 use crate::context::Context;
-use crate::metadata::{CargoResolver, CargoUpdateRequest};
 use crate::metadata::{Annotations, Cargo, Generator, MetadataGenerator, VendorGenerator};
+use crate::metadata::{CargoResolver, CargoUpdateRequest};
 use crate::rendering::{render_module_label, write_outputs, Renderer};
 use crate::splicing::{generate_lockfile, Splicer, SplicingManifest, WorkspaceMetadata};
 use crate::utils::normalize_cargo_file_paths;
