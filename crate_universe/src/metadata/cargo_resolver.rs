@@ -222,14 +222,7 @@ impl<'a> CargoResolver<'a> {
                                                         .as_ref()
                                                         .is_some_and(|s| s.starts_with("git+")))
                                             {
-                                                match (&pkg.source, &dep.source) {
-                                                    (None, None) => true,
-                                                    (
-                                                        Some(cargo_metadata::Source { repr }),
-                                                        Some(dep_src),
-                                                    ) => repr.starts_with(dep_src),
-                                                    _ => false,
-                                                }
+                                                true
                                             } else {
                                                 false
                                             }
@@ -559,7 +552,7 @@ impl<'a> CargoResolver<'a> {
                 for (alias, optional) in &dep.aliases_optional {
                     let dependency = Dependency {
                         features: dep.features.iter().map(|f| f.to_string()).collect(),
-                        alias: alias.map(|a| a.to_string()),
+                        alias: alias.map(|a| a.replace("-", "_")),
                         id: CrateId::from(dep_pkg.package),
                         target_name: dep_pkg.library_target_name.unwrap().to_string(),
                         optional: *optional,
