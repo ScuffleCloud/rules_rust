@@ -846,7 +846,8 @@ def construct_arguments(
         build_metadata = False,
         force_depend_on_objects = False,
         skip_expanding_rustc_env = False,
-        error_format = None):
+        error_format = None,
+        include_coverage = False):
     """Builds an Args object containing common rustc flags
 
     Args:
@@ -879,6 +880,7 @@ def construct_arguments(
         force_depend_on_objects (bool): Force using `.rlib` object files instead of metadata (`.rmeta`) files even if they are available.
         skip_expanding_rustc_env (bool): Whether to skip expanding CrateInfo.rustc_env_attr
         error_format (str, optional): Error format to pass to the `--error-format` command line argument. If set to None, uses the "_error_format" entry in `attr`.
+        include_coverage: (bool): Whether we should include coverage flags for this crate.
 
     Returns:
         tuple: A tuple of the following items
@@ -1070,7 +1072,7 @@ def construct_arguments(
         rustc_flags.add("--extern")
         rustc_flags.add("proc_macro")
 
-    if toolchain.llvm_cov and ctx.coverage_instrumented():
+    if toolchain.llvm_cov and include_coverage:
         # https://doc.rust-lang.org/rustc/instrument-coverage.html
         rustc_flags.add("--codegen=instrument-coverage")
 
@@ -1177,8 +1179,8 @@ def rustc_compile_action(
         force_all_deps_direct = False,
         crate_info_dict = None,
         skip_expanding_rustc_env = False,
-        include_coverage = True,
-        include_coverage_runfiles = False):
+        include_coverage = None,
+        include_coverage_provider = True):
     """Create and run a rustc compile action based on the current rule's attributes
 
     Args:
@@ -1192,7 +1194,7 @@ def rustc_compile_action(
         crate_info_dict: A mutable dict used to create CrateInfo provider
         skip_expanding_rustc_env (bool, optional): Whether to expand CrateInfo.rustc_env
         include_coverage (bool, optional): Whether to generate coverage information or not.
-        include_coverage_runfiles: (bool, optional): Whether to include the runfiles for coverage generation.
+        include_coverage_provider: (bool, optional): Whether to the coverage provider or not.
 
     Returns:
         list: A list of the following providers:
@@ -1201,6 +1203,9 @@ def rustc_compile_action(
             - (DefaultInfo): The output file for this crate, and its runfiles.
     """
     crate_info = rust_common.create_crate_info(**crate_info_dict)
+
+    if include_coverage == None:
+        include_coverage = toolchain.llvm_cov and ctx.coverage_instrumented()
 
     build_metadata = crate_info_dict.get("metadata", None)
     rustc_output = crate_info_dict.get("rustc_output", None)
@@ -1299,6 +1304,7 @@ def rustc_compile_action(
         stamp = stamp,
         use_json_output = bool(build_metadata) or bool(rustc_output) or bool(rustc_rmeta_output),
         skip_expanding_rustc_env = skip_expanding_rustc_env,
+        include_coverage = include_coverage,
     )
 
     args_metadata = None
@@ -1518,7 +1524,7 @@ def rustc_compile_action(
         outputs = [crate_info.output]
 
     coverage_runfiles = []
-    if include_coverage_runfiles:
+    if include_coverage:
         coverage_runfiles = [toolchain.llvm_cov, toolchain.llvm_profdata]
 
     experimental_use_coverage_metadata_files = toolchain._experimental_use_coverage_metadata_files
@@ -1581,7 +1587,7 @@ def rustc_compile_action(
     # baseline_coverage.dat created here will conflict with the baseline_coverage.dat of the
     # underlying target, which is a build failure. So we add an option to disable it so that this
     # function can be invoked from aspects for rules that have its own InstrumentedFilesInfo.
-    if include_coverage:
+    if include_coverage and include_coverage_provider:
         providers.append(
             coverage_common.instrumented_files_info(
                 ctx,
