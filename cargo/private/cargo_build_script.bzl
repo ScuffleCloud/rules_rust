@@ -493,7 +493,10 @@ def _cargo_build_script_impl(ctx):
         getattr(ctx.attr, "tools", []) +
         script_info.data +
         script_info.tools,
-        known_variables,
+        known_variables | {
+            k: v.replace("$", "$$")
+            for k, v in env.items()
+        },
     ))
 
     tools = depset(
