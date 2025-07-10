@@ -254,11 +254,17 @@ impl<'a> CargoResolver<'a> {
 
                                 let mut stack = Vec::from_iter(features);
                                 while let Some(feat) = stack.pop() {
+                                    let feat = match feat.split_once('/') {
+                                        Some((feat, _)) if !feat.ends_with('?') => feat,
+                                        None => feat.as_str(),
+                                        _ => continue,
+                                    };
+
                                     let Some(features) = package.features.get(feat) else {
                                         continue;
                                     };
 
-                                    if flat.insert(feat.as_str()) {
+                                    if flat.insert(feat) {
                                         stack.extend(features);
                                     }
                                 }
