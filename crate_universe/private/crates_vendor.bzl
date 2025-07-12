@@ -595,6 +595,12 @@ CRATES_VENDOR_ATTRS = {
         doc = "The path to a directory to write files into. Absolute paths will be treated as relative to the workspace root",
         default = "crates",
     ),
+    "stable_as_nightly": attr.bool(
+        doc = (
+            "If true, adds `RUSTC_BOOTSTRAP=1` to force the stable compiler to act as nightly."
+        ),
+        default = False,
+    ),
     "_bash_runfiles": attr.label(
         doc = "The runfiles library for bash.",
         cfg = "target",
@@ -683,10 +689,15 @@ call against the generated workspace. The following table describes how to contr
 
 def _crates_vendor_remote_repository_impl(repository_ctx):
     build_file = repository_ctx.path(repository_ctx.attr.build_file)
-    defs_module = repository_ctx.path(repository_ctx.attr.defs_module)
-
     repository_ctx.file("BUILD.bazel", repository_ctx.read(build_file))
+
+    defs_module = repository_ctx.path(repository_ctx.attr.defs_module)
     repository_ctx.file("defs.bzl", repository_ctx.read(defs_module))
+
+    if repository_ctx.attr.alias_rules_module:
+        alias_rules_module = repository_ctx.path(repository_ctx.attr.alias_rules_module)
+        repository_ctx.file("alias_rules.bzl", repository_ctx.read(alias_rules_module))
+
     repository_ctx.file("crates.bzl", "")
     repository_ctx.file("WORKSPACE.bazel", """workspace(name = "{}")""".format(
         repository_ctx.name,
@@ -703,6 +714,14 @@ crates_vendor_remote_repository = repository_rule(
         "defs_module": attr.label(
             doc = "The `defs.bzl` file to use in the repository",
             mandatory = True,
+        ),
+        "alias_rules_module": attr.label(
+            doc = "The `alias_rules.bzl` file to use in the repository",
+            mandatory = True,
+        ),
+        "alias_rules_module": attr.label(
+            doc = "The `alias_rules.bzl` file to use in the repository",
+            mandatory = False,
         ),
     },
 )
