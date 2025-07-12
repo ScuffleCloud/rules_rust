@@ -123,6 +123,7 @@ def splice_workspace_manifest(
         config_path,
         output_dir,
         repository_name,
+        stable_as_nightly,
         debug_workspace_dir = None):
     """Splice together a Cargo workspace from various other manifests and package definitions
 
@@ -174,6 +175,9 @@ def splice_workspace_manifest(
     # Ensure the short hand repin variable is set to the full name.
     if REPIN in repository_ctx.os.environ and CARGO_BAZEL_REPIN not in repository_ctx.os.environ:
         env["CARGO_BAZEL_REPIN"] = repository_ctx.os.environ[REPIN]
+
+    if stable_as_nightly:
+        env["RUSTC_BOOTSTRAP"] = "1"
 
     cargo_bazel_fn(
         args = arguments,

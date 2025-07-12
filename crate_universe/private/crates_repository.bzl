@@ -88,6 +88,7 @@ def _crates_repository_impl(repository_ctx):
             cargo_lockfile = lockfiles.cargo,
             splicing_manifest = splicing_manifest,
             config_path = config_path,
+            stable_as_nightly = repository_ctx.stable_as_nightly,
             output_dir = repository_ctx.path("splicing-output"),
             repository_name = repository_ctx.name,
         )
@@ -373,6 +374,12 @@ CARGO_BAZEL_REPIN=1 CARGO_BAZEL_REPIN_ONLY=crate_index bazel sync --only=crate_i
         "supported_platform_triples": attr.string_list(
             doc = "A set of all platform triples to consider when generating dependencies.",
             default = SUPPORTED_PLATFORM_TRIPLES,
+        ),
+        "stable_as_nightly": attr.bool(
+            doc = (
+                "If true, adds `RUSTC_BOOTSTRAP=1` to force the stable compiler to act as nightly."
+            ),
+            default = False,
         ),
     },
     environ = CRATES_REPOSITORY_ENVIRON,
