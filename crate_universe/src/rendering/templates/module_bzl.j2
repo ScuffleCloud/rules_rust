@@ -200,7 +200,7 @@ def crate_features(
     features = _make_crate_features().add(additional)
 
     if all:
-        features.add(_FEATURE_FLAGS.get(package_name, []).keys())
+        features.add(_FEATURE_FLAGS.get(package_name, {}).keys())
 
     if default:
         features.add(_RESOLVED_FEATURE_FLAGS.get(package_name, {}))
@@ -323,7 +323,7 @@ def all_crate_deps(
         all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES.get(package_name, {}))
 
     if not all_dependency_maps:
-        fail("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
+        print("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
 
     features = _make_crate_features(package_name = package_name).add(features).flatten()
     dependencies = _flatten_dependency_maps(all_dependency_maps, features)

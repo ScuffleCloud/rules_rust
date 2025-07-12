@@ -717,10 +717,6 @@ crates_vendor_remote_repository = repository_rule(
         ),
         "alias_rules_module": attr.label(
             doc = "The `alias_rules.bzl` file to use in the repository",
-            mandatory = True,
-        ),
-        "alias_rules_module": attr.label(
-            doc = "The `alias_rules.bzl` file to use in the repository",
             mandatory = False,
         ),
     },

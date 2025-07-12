@@ -643,6 +643,7 @@ def _generate_hub_and_spokes(
             cargo_lockfile = cargo_lockfile,
             splicing_manifest = splicing_manifest,
             config_path = config_file,
+            stable_as_nightly = cfg.stable_as_nightly,
             output_dir = tag_path.get_child("splicing-output"),
             debug_workspace_dir = tag_path.get_child("splicing-workspace"),
             repository_name = cfg.name,
@@ -1087,6 +1088,12 @@ _FROM_COMMON_ATTRS = {
     "supported_platform_triples": attr.string_list(
         doc = "A set of all platform triples to consider when generating dependencies.",
         default = SUPPORTED_PLATFORM_TRIPLES,
+    ),
+    "stable_as_nightly": attr.bool(
+        doc = (
+            "If true, adds `RUSTC_BOOTSTRAP=1` to force the stable compiler to act as nightly."
+        ),
+        default = False,
     ),
 }
 

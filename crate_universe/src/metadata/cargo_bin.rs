@@ -88,6 +88,10 @@ impl Cargo {
     }
 
     pub(crate) fn is_nightly(&self) -> Result<bool> {
+        if std::env::var("RUSTC_BOOTSTRAP").is_ok_and(|s| s == "1") {
+            return Ok(true);
+        }
+
         let full_version = self.full_version()?;
         let version_str = full_version.split(' ').nth(1);
         if let Some(version_str) = version_str {
