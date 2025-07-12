@@ -25,6 +25,7 @@ def crate_repositories():
         name = "{{ repository_name }}",
         build_file = Label("{{ crates_module_label(file="BUILD.bazel") }}"),
         defs_module = Label("{{ crates_module_label(file="defs.bzl") }}"),
+        alias_rules_module = Label("{{ crates_module_label(file="alias_rules.bzl") }}"),
     )
 
     direct_deps = [struct(repo = "{{ repository_name }}", is_dev_dep = False)]
