@@ -25,6 +25,7 @@ def crate_repositories():
         name = "cui",
         build_file = Label("//crate_universe/3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//crate_universe/3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//crate_universe/3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "cui", is_dev_dep = False)]

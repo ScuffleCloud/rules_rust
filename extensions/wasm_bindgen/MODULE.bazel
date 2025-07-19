@@ -50,6 +50,7 @@ use_repo(
     "rrwbd__diff-0.1.13",
     "rrwbd__env_logger-0.11.6",
     "rrwbd__log-0.4.22",
+    "rrwbd__native-tls-0.2.12",
     "rrwbd__predicates-3.1.3",
     "rrwbd__rayon-1.10.0",
     "rrwbd__rouille-3.6.2",

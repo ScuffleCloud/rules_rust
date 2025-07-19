@@ -99,22 +99,22 @@ rust_library(
     version = "0.1.13",
     deps = select({
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # aarch64-pc-windows-msvc
-            "@cui__windows-sys-0.59.0//:windows_sys",  # aarch64-pc-windows-msvc
+            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # cfg(any(windows, target_family = "wasm"))
+            "@cui__windows-sys-0.59.0//:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # i686-pc-windows-msvc
-            "@cui__windows-sys-0.59.0//:windows_sys",  # i686-pc-windows-msvc
+            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # cfg(any(windows, target_family = "wasm"))
+            "@cui__windows-sys-0.59.0//:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:wasm32-unknown-unknown": [
-            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # wasm32-unknown-unknown
+            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # cfg(any(windows, target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:wasm32-wasip1": [
-            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # wasm32-wasip1
+            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # cfg(any(windows, target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # x86_64-pc-windows-msvc
-            "@cui__windows-sys-0.59.0//:windows_sys",  # x86_64-pc-windows-msvc
+            "@cui__jiff-tzdb-platform-0.1.1//:jiff_tzdb_platform",  # cfg(any(windows, target_family = "wasm"))
+            "@cui__windows-sys-0.59.0//:windows_sys",  # cfg(windows)
         ],
         "//conditions:default": [],
     }),

@@ -25,6 +25,7 @@ def crate_repositories():
         name = "rules_rust_bindgen_deps",
         build_file = Label("//3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "rules_rust_bindgen_deps", is_dev_dep = False)]

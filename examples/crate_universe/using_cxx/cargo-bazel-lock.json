@@ -1,5 +1,5 @@
 {
-  "checksum": "18f159c8257c5da7710717f72360a93cf45a4f91baf2f3861ae1f27166b97124",
+  "checksum": "8510330867b26d6d88172124d9ca9567e39757607e13860fa8fe4cad116168ea",
   "crates": {
     "cc 1.0.82": {
       "name": "cc",
@@ -27,6 +27,13 @@
       ],
       "library_target_name": "cc",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -49,7 +56,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "jobserver": [
+          "dep:jobserver"
+        ],
+        "parallel": [
+          "jobserver"
+        ]
+      }
     },
     "cxx 1.0.109": {
       "name": "cxx",
@@ -77,6 +92,15 @@
       ],
       "library_target_name": "cxx",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -89,13 +113,51 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "link-cplusplus 1.0.9",
-              "target": "link_cplusplus"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "link-cplusplus 1.0.9",
+                "target": "link_cplusplus"
+              }
+            ]
+          }
         },
         "extra_deps": {
           "common": [
@@ -105,13 +167,51 @@
         },
         "edition": "2021",
         "proc_macro_deps": {
-          "common": [
-            {
-              "id": "cxxbridge-macro 1.0.109",
-              "target": "cxxbridge_macro"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "cxxbridge-macro 1.0.109",
+                "target": "cxxbridge_macro"
+              }
+            ]
+          }
         },
         "version": "1.0.109"
       },
@@ -124,6 +224,25 @@
       "additive_build_file_content": "cc_library(\n    name = \"cxx_cc\",\n    srcs = [\"src/cxx.cc\"],\n    hdrs = [\"include/cxx.h\"],\n    include_prefix = \"rust\",\n    includes = [\"include\"],\n    linkstatic = True,\n    strip_include_prefix = \"include\",\n    visibility = [\"//visibility:public\"],\n)\n",
       "extra_aliased_targets": {
         "cxx_cc": "cxx_cc"
+      },
+      "crate_features": {
+        "alloc": [],
+        "c++14": [
+          "cxxbridge-flags/c++14"
+        ],
+        "c++17": [
+          "cxxbridge-flags/c++17"
+        ],
+        "c++20": [
+          "cxxbridge-flags/c++20"
+        ],
+        "default": [
+          "cxxbridge-flags/default",
+          "std"
+        ],
+        "std": [
+          "alloc"
+        ]
       }
     },
     "cxxbridge-flags 1.0.109": {
@@ -152,6 +271,13 @@
       ],
       "library_target_name": "cxxbridge_flags",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -169,7 +295,13 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "c++14": [],
+        "c++17": [],
+        "c++20": [],
+        "default": []
+      }
     },
     "cxxbridge-macro 1.0.109": {
       "name": "cxxbridge-macro",
@@ -197,25 +329,90 @@
       ],
       "library_target_name": "cxxbridge_macro",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.66",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.32",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.28",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.28",
+                "target": "syn"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.28",
+                "target": "syn"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.28",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.28",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.28",
+                "target": "syn"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "1.0.109"
@@ -225,7 +422,36 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "clang-ast": [
+          "dep:clang-ast"
+        ],
+        "experimental-async-fn": [],
+        "experimental-enum-variants-from-header": [
+          "clang-ast",
+          "flate2",
+          "memmap",
+          "serde",
+          "serde_derive",
+          "serde_json"
+        ],
+        "flate2": [
+          "dep:flate2"
+        ],
+        "memmap": [
+          "dep:memmap"
+        ],
+        "serde": [
+          "dep:serde"
+        ],
+        "serde_derive": [
+          "dep:serde_derive"
+        ],
+        "serde_json": [
+          "dep:serde_json"
+        ]
+      }
     },
     "direct-cargo-bazel-deps 0.0.1": {
       "name": "direct-cargo-bazel-deps",
@@ -248,24 +474,104 @@
       ],
       "library_target_name": "direct_cargo_bazel_deps",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "cxx 1.0.109",
-              "target": "cxx"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.0.1"
       },
       "license": null,
       "license_ids": [],
-      "license_file": null
+      "license_file": null,
+      "feature_dep_maps": {
+        "deps": {
+          "required": {
+            "common": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "selects": {}
+          }
+        },
+        "build_link_deps": {
+          "required": {
+            "common": [
+              {
+                "id": "cxx 1.0.109",
+                "target": "cxx",
+                "alias": "cxx"
+              }
+            ],
+            "selects": {}
+          }
+        }
+      }
     },
     "libc 0.2.147": {
       "name": "libc",
@@ -305,6 +611,12 @@
       ],
       "library_target_name": "libc",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -343,7 +655,26 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "align": [],
+        "const-extern-fn": [],
+        "default": [
+          "std"
+        ],
+        "extra_traits": [],
+        "rustc-dep-of-std": [
+          "align",
+          "rustc-std-workspace-core"
+        ],
+        "rustc-std-workspace-core": [
+          "dep:rustc-std-workspace-core"
+        ],
+        "std": [],
+        "use_std": [
+          "std"
+        ]
+      }
     },
     "link-cplusplus 1.0.9": {
       "name": "link-cplusplus",
@@ -383,6 +714,15 @@
       ],
       "library_target_name": "link_cplusplus",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -415,13 +755,51 @@
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "cc 1.0.82",
-              "target": "cc"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "cc 1.0.82",
+                "target": "cc"
+              }
+            ]
+          }
         },
         "links": "cplusplus"
       },
@@ -430,7 +808,19 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [],
+        "libc++": [],
+        "libcxx": [
+          "libc++"
+        ],
+        "libstdc++": [],
+        "libstdcxx": [
+          "libstdc++"
+        ],
+        "nothing": []
+      }
     },
     "proc-macro2 1.0.66": {
       "name": "proc-macro2",
@@ -470,6 +860,13 @@
       ],
       "library_target_name": "proc_macro2",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -485,13 +882,40 @@
             {
               "id": "proc-macro2 1.0.66",
               "target": "build_script_build"
-            },
-            {
-              "id": "unicode-ident 1.0.11",
-              "target": "unicode_ident"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "1.0.66"
@@ -512,7 +936,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "proc-macro"
+        ],
+        "nightly": [],
+        "proc-macro": [],
+        "span-locations": []
+      }
     },
     "quote 1.0.32": {
       "name": "quote",
@@ -540,6 +972,13 @@
       ],
       "library_target_name": "quote",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -551,13 +990,39 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.66",
-              "target": "proc_macro2"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "1.0.32"
@@ -567,7 +1032,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "proc-macro"
+        ],
+        "proc-macro": [
+          "proc-macro2/proc-macro"
+        ]
+      }
     },
     "syn 2.0.28": {
       "name": "syn",
@@ -595,6 +1068,13 @@
       ],
       "library_target_name": "syn",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -612,21 +1092,79 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.66",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.32",
-              "target": "quote"
-            },
-            {
-              "id": "unicode-ident 1.0.11",
-              "target": "unicode_ident"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.66",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.32",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.11",
+                "target": "unicode_ident"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "2.0.28"
@@ -636,7 +1174,37 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "clone-impls": [],
+        "default": [
+          "clone-impls",
+          "derive",
+          "parsing",
+          "printing",
+          "proc-macro"
+        ],
+        "derive": [],
+        "extra-traits": [],
+        "fold": [],
+        "full": [],
+        "parsing": [],
+        "printing": [
+          "quote"
+        ],
+        "proc-macro": [
+          "proc-macro2/proc-macro",
+          "quote/proc-macro"
+        ],
+        "quote": [
+          "dep:quote"
+        ],
+        "test": [
+          "syn-test-suite/all-features"
+        ],
+        "visit": [],
+        "visit-mut": []
+      }
     },
     "unicode-ident 1.0.11": {
       "name": "unicode-ident",
@@ -664,6 +1232,13 @@
       ],
       "library_target_name": "unicode_ident",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -706,7 +1281,8 @@
       "x86_64-pc-windows-msvc"
     ],
     "x86_64-unknown-linux-gnu": [
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "x86_64-unknown-nixos-gnu": [
       "x86_64-unknown-nixos-gnu"

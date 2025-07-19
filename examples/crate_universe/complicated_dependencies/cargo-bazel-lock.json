@@ -1,45 +1,6 @@
 {
-  "checksum": "97782d20ed204529dee75dcfced3a445f1317ad4610dca4bf7271d90770eebf2",
+  "checksum": "b6c0f945451fd4e8e1bde0d37655d1a61c4e1ee09656bf4aca1521bdca65556a",
   "crates": {
-    "aho-corasick 1.1.3": {
-      "name": "aho-corasick",
-      "version": "1.1.3",
-      "package_url": "https://github.com/BurntSushi/aho-corasick",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/aho-corasick/1.1.3/download",
-          "sha256": "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "aho_corasick",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "aho_corasick",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "edition": "2021",
-        "version": "1.1.3"
-      },
-      "license": "Unlicense OR MIT",
-      "license_ids": [
-        "MIT",
-        "Unlicense"
-      ],
-      "license_file": "LICENSE-MIT"
-    },
     "bindgen 0.66.1": {
       "name": "bindgen",
       "version": "0.66.1",
@@ -78,6 +39,13 @@
       ],
       "library_target_name": "bindgen",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -92,57 +60,260 @@
             {
               "id": "bindgen 0.66.1",
               "target": "build_script_build"
-            },
-            {
-              "id": "bitflags 2.5.0",
-              "target": "bitflags"
-            },
-            {
-              "id": "cexpr 0.6.0",
-              "target": "cexpr"
-            },
-            {
-              "id": "clang-sys 1.7.0",
-              "target": "clang_sys"
-            },
-            {
-              "id": "lazy_static 1.4.0",
-              "target": "lazy_static"
-            },
-            {
-              "id": "lazycell 1.3.0",
-              "target": "lazycell"
-            },
-            {
-              "id": "peeking_take_while 0.1.2",
-              "target": "peeking_take_while"
-            },
-            {
-              "id": "proc-macro2 1.0.81",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.36",
-              "target": "quote"
-            },
-            {
-              "id": "regex 1.10.4",
-              "target": "regex"
-            },
-            {
-              "id": "rustc-hash 1.1.0",
-              "target": "rustc_hash"
-            },
-            {
-              "id": "shlex 1.3.0",
-              "target": "shlex"
-            },
-            {
-              "id": "syn 2.0.60",
-              "target": "syn"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "cexpr 0.6.0",
+                "target": "cexpr"
+              },
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              },
+              {
+                "id": "lazy_static 1.4.0",
+                "target": "lazy_static"
+              },
+              {
+                "id": "lazycell 1.3.0",
+                "target": "lazycell"
+              },
+              {
+                "id": "peeking_take_while 0.1.2",
+                "target": "peeking_take_while"
+              },
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "regex 1.10.4",
+                "target": "regex"
+              },
+              {
+                "id": "rustc-hash 1.1.0",
+                "target": "rustc_hash"
+              },
+              {
+                "id": "shlex 1.3.0",
+                "target": "shlex"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "cexpr 0.6.0",
+                "target": "cexpr"
+              },
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              },
+              {
+                "id": "lazy_static 1.4.0",
+                "target": "lazy_static"
+              },
+              {
+                "id": "lazycell 1.3.0",
+                "target": "lazycell"
+              },
+              {
+                "id": "peeking_take_while 0.1.2",
+                "target": "peeking_take_while"
+              },
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "regex 1.10.4",
+                "target": "regex"
+              },
+              {
+                "id": "rustc-hash 1.1.0",
+                "target": "rustc_hash"
+              },
+              {
+                "id": "shlex 1.3.0",
+                "target": "shlex"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "cexpr 0.6.0",
+                "target": "cexpr"
+              },
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              },
+              {
+                "id": "lazy_static 1.4.0",
+                "target": "lazy_static"
+              },
+              {
+                "id": "lazycell 1.3.0",
+                "target": "lazycell"
+              },
+              {
+                "id": "peeking_take_while 0.1.2",
+                "target": "peeking_take_while"
+              },
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "regex 1.10.4",
+                "target": "regex"
+              },
+              {
+                "id": "rustc-hash 1.1.0",
+                "target": "rustc_hash"
+              },
+              {
+                "id": "shlex 1.3.0",
+                "target": "shlex"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "cexpr 0.6.0",
+                "target": "cexpr"
+              },
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              },
+              {
+                "id": "lazy_static 1.4.0",
+                "target": "lazy_static"
+              },
+              {
+                "id": "lazycell 1.3.0",
+                "target": "lazycell"
+              },
+              {
+                "id": "peeking_take_while 0.1.2",
+                "target": "peeking_take_while"
+              },
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "regex 1.10.4",
+                "target": "regex"
+              },
+              {
+                "id": "rustc-hash 1.1.0",
+                "target": "rustc_hash"
+              },
+              {
+                "id": "shlex 1.3.0",
+                "target": "shlex"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "cexpr 0.6.0",
+                "target": "cexpr"
+              },
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              },
+              {
+                "id": "lazy_static 1.4.0",
+                "target": "lazy_static"
+              },
+              {
+                "id": "lazycell 1.3.0",
+                "target": "lazycell"
+              },
+              {
+                "id": "peeking_take_while 0.1.2",
+                "target": "peeking_take_while"
+              },
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "regex 1.10.4",
+                "target": "regex"
+              },
+              {
+                "id": "rustc-hash 1.1.0",
+                "target": "rustc_hash"
+              },
+              {
+                "id": "shlex 1.3.0",
+                "target": "shlex"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.66.1"
@@ -158,20 +329,76 @@
           "**"
         ],
         "link_deps": {
-          "common": [
-            {
-              "id": "clang-sys 1.7.0",
-              "target": "clang_sys"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "clang-sys 1.7.0",
+                "target": "clang_sys"
+              }
+            ]
+          }
         }
       },
       "license": "BSD-3-Clause",
       "license_ids": [
         "BSD-3-Clause"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "__cli": [],
+        "__testing_only_extra_assertions": [],
+        "__testing_only_libclang_5": [],
+        "__testing_only_libclang_9": [],
+        "default": [
+          "logging",
+          "prettyplease",
+          "runtime",
+          "which-rustfmt"
+        ],
+        "experimental": [
+          "dep:annotate-snippets"
+        ],
+        "logging": [
+          "dep:log"
+        ],
+        "prettyplease": [
+          "dep:prettyplease"
+        ],
+        "runtime": [
+          "clang-sys/runtime"
+        ],
+        "static": [
+          "clang-sys/static"
+        ],
+        "which-rustfmt": [
+          "dep:which"
+        ]
+      }
     },
     "bitflags 2.5.0": {
       "name": "bitflags",
@@ -199,6 +426,15 @@
       ],
       "library_target_name": "bitflags",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -210,7 +446,30 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "arbitrary": [
+          "dep:arbitrary"
+        ],
+        "bytemuck": [
+          "dep:bytemuck"
+        ],
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "example_generated": [],
+        "rustc-dep-of-std": [
+          "compiler_builtins",
+          "core"
+        ],
+        "serde": [
+          "dep:serde"
+        ],
+        "std": []
+      }
     },
     "boring 3.1.0": {
       "name": "boring",
@@ -238,33 +497,176 @@
       ],
       "library_target_name": "boring",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "bitflags 2.5.0",
-              "target": "bitflags"
-            },
-            {
-              "id": "boring-sys 3.1.0",
-              "target": "boring_sys"
-            },
-            {
-              "id": "foreign-types 0.5.0",
-              "target": "foreign_types"
-            },
-            {
-              "id": "libc 0.2.154",
-              "target": "libc"
-            },
-            {
-              "id": "once_cell 1.19.0",
-              "target": "once_cell"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "bitflags 2.5.0",
+                "target": "bitflags"
+              },
+              {
+                "id": "boring-sys 3.1.0",
+                "target": "boring_sys"
+              },
+              {
+                "id": "foreign-types 0.5.0",
+                "target": "foreign_types"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "once_cell 1.19.0",
+                "target": "once_cell"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "3.1.0"
@@ -273,7 +675,35 @@
       "license_ids": [
         "Apache-2.0"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "fips": [
+          "boring-sys/fips"
+        ],
+        "fips-link-precompiled": [
+          "boring-sys/fips-link-precompiled"
+        ],
+        "kx-client-nist-required": [
+          "kx-safe-default"
+        ],
+        "kx-client-pq-preferred": [
+          "kx-client-pq-supported",
+          "kx-safe-default"
+        ],
+        "kx-client-pq-supported": [
+          "kx-safe-default"
+        ],
+        "kx-safe-default": [],
+        "no-patches": [
+          "boring-sys/no-patches"
+        ],
+        "pq-experimental": [
+          "boring-sys/pq-experimental"
+        ],
+        "rpk": [
+          "boring-sys/rpk"
+        ]
+      }
     },
     "boring-sys 3.1.0": {
       "name": "boring-sys",
@@ -313,6 +743,15 @@
       ],
       "library_target_name": "boring_sys",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data": {
           "common": [
             "@@//complicated_dependencies:boringssl_gen_dir"
@@ -351,25 +790,135 @@
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "bindgen 0.66.1",
-              "target": "bindgen"
-            },
-            {
-              "id": "cmake 0.1.50",
-              "target": "cmake"
-            },
-            {
-              "id": "fs_extra 1.3.0",
-              "target": "fs_extra"
-            },
-            {
-              "id": "fslock 0.2.1",
-              "target": "fslock"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "bindgen 0.66.1",
+                "target": "bindgen"
+              },
+              {
+                "id": "cmake 0.1.50",
+                "target": "cmake"
+              },
+              {
+                "id": "fs_extra 1.3.0",
+                "target": "fs_extra"
+              },
+              {
+                "id": "fslock 0.2.1",
+                "target": "fslock"
+              }
+            ]
+          }
         },
         "build_script_env": {
           "common": {
@@ -384,7 +933,14 @@
       "license_ids": [
         "MIT"
       ],
-      "license_file": "LICENSE-MIT"
+      "license_file": "LICENSE-MIT",
+      "crate_features": {
+        "fips": [],
+        "fips-link-precompiled": [],
+        "no-patches": [],
+        "pq-experimental": [],
+        "rpk": []
+      }
     },
     "cc 1.0.95": {
       "name": "cc",
@@ -412,6 +968,13 @@
       ],
       "library_target_name": "cc",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -423,7 +986,23 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "jobserver": [
+          "dep:jobserver"
+        ],
+        "libc": [
+          "dep:libc"
+        ],
+        "once_cell": [
+          "dep:once_cell"
+        ],
+        "parallel": [
+          "jobserver",
+          "libc",
+          "once_cell"
+        ]
+      }
     },
     "cexpr 0.6.0": {
       "name": "cexpr",
@@ -451,17 +1030,50 @@
       ],
       "library_target_name": "cexpr",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "nom 7.1.3",
-              "target": "nom"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "nom 7.1.3",
+                "target": "nom"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "nom 7.1.3",
+                "target": "nom"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "nom 7.1.3",
+                "target": "nom"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "nom 7.1.3",
+                "target": "nom"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "nom 7.1.3",
+                "target": "nom"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.6.0"
@@ -499,6 +1111,12 @@
       ],
       "library_target_name": "cfg_if",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -510,7 +1128,19 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "rustc-dep-of-std": [
+          "compiler_builtins",
+          "core"
+        ]
+      }
     },
     "clang-sys 1.7.0": {
       "name": "clang-sys",
@@ -550,6 +1180,13 @@
       ],
       "library_target_name": "clang_sys",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -573,21 +1210,80 @@
             {
               "id": "clang-sys 1.7.0",
               "target": "build_script_build"
-            },
-            {
-              "id": "glob 0.3.1",
-              "target": "glob"
-            },
-            {
-              "id": "libc 0.2.154",
-              "target": "libc"
-            },
-            {
-              "id": "libloading 0.8.3",
-              "target": "libloading"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "libloading 0.8.3",
+                "target": "libloading"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "libloading 0.8.3",
+                "target": "libloading"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "libloading 0.8.3",
+                "target": "libloading"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "libloading 0.8.3",
+                "target": "libloading"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              },
+              {
+                "id": "libc 0.2.154",
+                "target": "libc"
+              },
+              {
+                "id": "libloading 0.8.3",
+                "target": "libloading"
+              }
+            ]
+          }
         },
         "edition": "2015",
         "version": "1.7.0"
@@ -603,13 +1299,39 @@
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "glob 0.3.1",
-              "target": "glob"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "glob 0.3.1",
+                "target": "glob"
+              }
+            ]
+          }
         },
         "links": "clang"
       },
@@ -617,7 +1339,71 @@
       "license_ids": [
         "Apache-2.0"
       ],
-      "license_file": "LICENSE.txt"
+      "license_file": "LICENSE.txt",
+      "crate_features": {
+        "clang_10_0": [
+          "clang_9_0"
+        ],
+        "clang_11_0": [
+          "clang_10_0"
+        ],
+        "clang_12_0": [
+          "clang_11_0"
+        ],
+        "clang_13_0": [
+          "clang_12_0"
+        ],
+        "clang_14_0": [
+          "clang_13_0"
+        ],
+        "clang_15_0": [
+          "clang_14_0"
+        ],
+        "clang_16_0": [
+          "clang_15_0"
+        ],
+        "clang_17_0": [
+          "clang_16_0"
+        ],
+        "clang_3_5": [],
+        "clang_3_6": [
+          "clang_3_5"
+        ],
+        "clang_3_7": [
+          "clang_3_6"
+        ],
+        "clang_3_8": [
+          "clang_3_7"
+        ],
+        "clang_3_9": [
+          "clang_3_8"
+        ],
+        "clang_4_0": [
+          "clang_3_9"
+        ],
+        "clang_5_0": [
+          "clang_4_0"
+        ],
+        "clang_6_0": [
+          "clang_5_0"
+        ],
+        "clang_7_0": [
+          "clang_6_0"
+        ],
+        "clang_8_0": [
+          "clang_7_0"
+        ],
+        "clang_9_0": [
+          "clang_8_0"
+        ],
+        "libloading": [
+          "dep:libloading"
+        ],
+        "runtime": [
+          "libloading"
+        ],
+        "static": []
+      }
     },
     "cmake 0.1.50": {
       "name": "cmake",
@@ -645,17 +1431,50 @@
       ],
       "library_target_name": "cmake",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "cc 1.0.95",
-              "target": "cc"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "cc 1.0.95",
+                "target": "cc"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "cc 1.0.95",
+                "target": "cc"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "cc 1.0.95",
+                "target": "cc"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "cc 1.0.95",
+                "target": "cc"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "cc 1.0.95",
+                "target": "cc"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.1.50"
@@ -688,24 +1507,92 @@
       ],
       "library_target_name": "direct_cargo_bazel_deps",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "boring 3.1.0",
-              "target": "boring"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.0.1"
       },
       "license": null,
       "license_ids": [],
-      "license_file": null
+      "license_file": null,
+      "feature_dep_maps": {
+        "deps": {
+          "required": {
+            "common": [
+              {
+                "id": "boring 3.1.0",
+                "target": "boring",
+                "alias": "boring"
+              }
+            ],
+            "selects": {}
+          }
+        }
+      }
     },
     "foreign-types 0.5.0": {
       "name": "foreign-types",
@@ -733,6 +1620,15 @@
       ],
       "library_target_name": "foreign_types",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -744,23 +1640,99 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "foreign-types-shared 0.3.1",
-              "target": "foreign_types_shared"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "foreign-types-shared 0.3.1",
+                "target": "foreign_types_shared"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "proc_macro_deps": {
-          "common": [
-            {
-              "id": "foreign-types-macros 0.2.3",
-              "target": "foreign_types_macros"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "foreign-types-macros 0.2.3",
+                "target": "foreign_types_macros"
+              }
+            ]
+          }
         },
         "version": "0.5.0"
       },
@@ -769,7 +1741,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "std"
+        ],
+        "std": [
+          "foreign-types-macros/std"
+        ]
+      }
     },
     "foreign-types-macros 0.2.3": {
       "name": "foreign-types-macros",
@@ -797,6 +1777,13 @@
       ],
       "library_target_name": "foreign_types_macros",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -807,21 +1794,79 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.81",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.36",
-              "target": "quote"
-            },
-            {
-              "id": "syn 2.0.60",
-              "target": "syn"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "syn 2.0.60",
+                "target": "syn"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.2.3"
@@ -831,7 +1876,10 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "std": []
+      }
     },
     "foreign-types-shared 0.3.1": {
       "name": "foreign-types-shared",
@@ -859,6 +1907,15 @@
       ],
       "library_target_name": "foreign_types_shared",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -898,6 +1955,13 @@
       ],
       "library_target_name": "fs_extra",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -936,6 +2000,13 @@
       ],
       "library_target_name": "fslock",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -970,7 +2041,13 @@
       "license_ids": [
         "MIT"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "default": [
+          "std"
+        ],
+        "std": []
+      }
     },
     "glob 0.3.1": {
       "name": "glob",
@@ -998,6 +2075,13 @@
       ],
       "library_target_name": "glob",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1037,6 +2121,13 @@
       ],
       "library_target_name": "lazy_static",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1048,7 +2139,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "spin": [
+          "dep:spin"
+        ],
+        "spin_no_std": [
+          "spin"
+        ]
+      }
     },
     "lazycell 1.3.0": {
       "name": "lazycell",
@@ -1076,6 +2175,13 @@
       ],
       "library_target_name": "lazycell",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1087,7 +2193,20 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "clippy": [
+          "dep:clippy"
+        ],
+        "nightly": [],
+        "nightly-testing": [
+          "clippy",
+          "nightly"
+        ],
+        "serde": [
+          "dep:serde"
+        ]
+      }
     },
     "libc 0.2.154": {
       "name": "libc",
@@ -1127,6 +2246,15 @@
       ],
       "library_target_name": "libc",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1165,7 +2293,26 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "align": [],
+        "const-extern-fn": [],
+        "default": [
+          "std"
+        ],
+        "extra_traits": [],
+        "rustc-dep-of-std": [
+          "align",
+          "rustc-std-workspace-core"
+        ],
+        "rustc-std-workspace-core": [
+          "dep:rustc-std-workspace-core"
+        ],
+        "std": [],
+        "use_std": [
+          "std"
+        ]
+      }
     },
     "libloading 0.8.3": {
       "name": "libloading",
@@ -1193,6 +2340,13 @@
       ],
       "library_target_name": "libloading",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1248,6 +2402,13 @@
       ],
       "library_target_name": "memchr",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1266,7 +2427,33 @@
         "MIT",
         "Unlicense"
       ],
-      "license_file": "LICENSE-MIT"
+      "license_file": "LICENSE-MIT",
+      "crate_features": {
+        "alloc": [],
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "default": [
+          "std"
+        ],
+        "libc": [],
+        "logging": [
+          "dep:log"
+        ],
+        "rustc-dep-of-std": [
+          "compiler_builtins",
+          "core"
+        ],
+        "std": [
+          "alloc"
+        ],
+        "use_std": [
+          "std"
+        ]
+      }
     },
     "minimal-lexical 0.2.1": {
       "name": "minimal-lexical",
@@ -1294,6 +2481,13 @@
       ],
       "library_target_name": "minimal_lexical",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1311,7 +2505,17 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "alloc": [],
+        "compact": [],
+        "default": [
+          "std"
+        ],
+        "lint": [],
+        "nightly": [],
+        "std": []
+      }
     },
     "nom 7.1.3": {
       "name": "nom",
@@ -1339,6 +2543,13 @@
       ],
       "library_target_name": "nom",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1350,17 +2561,59 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "memchr 2.7.2",
-              "target": "memchr"
-            },
-            {
-              "id": "minimal-lexical 0.2.1",
-              "target": "minimal_lexical"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "memchr 2.7.2",
+                "target": "memchr"
+              },
+              {
+                "id": "minimal-lexical 0.2.1",
+                "target": "minimal_lexical"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "memchr 2.7.2",
+                "target": "memchr"
+              },
+              {
+                "id": "minimal-lexical 0.2.1",
+                "target": "minimal_lexical"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "memchr 2.7.2",
+                "target": "memchr"
+              },
+              {
+                "id": "minimal-lexical 0.2.1",
+                "target": "minimal_lexical"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "memchr 2.7.2",
+                "target": "memchr"
+              },
+              {
+                "id": "minimal-lexical 0.2.1",
+                "target": "minimal_lexical"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "memchr 2.7.2",
+                "target": "memchr"
+              },
+              {
+                "id": "minimal-lexical 0.2.1",
+                "target": "minimal_lexical"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "7.1.3"
@@ -1369,7 +2622,19 @@
       "license_ids": [
         "MIT"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "alloc": [],
+        "default": [
+          "std"
+        ],
+        "docsrs": [],
+        "std": [
+          "alloc",
+          "memchr/std",
+          "minimal-lexical/std"
+        ]
+      }
     },
     "once_cell 1.19.0": {
       "name": "once_cell",
@@ -1397,6 +2662,15 @@
       ],
       "library_target_name": "once_cell",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1417,7 +2691,33 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "alloc": [
+          "race"
+        ],
+        "atomic-polyfill": [
+          "critical-section"
+        ],
+        "critical-section": [
+          "dep:critical-section",
+          "portable-atomic"
+        ],
+        "default": [
+          "std"
+        ],
+        "parking_lot": [
+          "dep:parking_lot_core"
+        ],
+        "portable-atomic": [
+          "dep:portable-atomic"
+        ],
+        "race": [],
+        "std": [
+          "alloc"
+        ],
+        "unstable": []
+      }
     },
     "peeking_take_while 0.1.2": {
       "name": "peeking_take_while",
@@ -1445,6 +2745,13 @@
       ],
       "library_target_name": "peeking_take_while",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1496,6 +2803,13 @@
       ],
       "library_target_name": "proc_macro2",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1511,13 +2825,40 @@
             {
               "id": "proc-macro2 1.0.81",
               "target": "build_script_build"
-            },
-            {
-              "id": "unicode-ident 1.0.12",
-              "target": "unicode_ident"
             }
           ],
-          "selects": {}
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "1.0.81"
@@ -1538,7 +2879,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "proc-macro"
+        ],
+        "nightly": [],
+        "proc-macro": [],
+        "span-locations": []
+      }
     },
     "quote 1.0.36": {
       "name": "quote",
@@ -1566,6 +2915,13 @@
       ],
       "library_target_name": "quote",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1577,13 +2933,39 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.81",
-              "target": "proc_macro2"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "1.0.36"
@@ -1593,7 +2975,15 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "proc-macro"
+        ],
+        "proc-macro": [
+          "proc-macro2/proc-macro"
+        ]
+      }
     },
     "regex 1.10.4": {
       "name": "regex",
@@ -1621,6 +3011,13 @@
       ],
       "library_target_name": "regex",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1639,17 +3036,59 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "regex-automata 0.4.6",
-              "target": "regex_automata"
-            },
-            {
-              "id": "regex-syntax 0.8.3",
-              "target": "regex_syntax"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "regex-automata 0.4.6",
+                "target": "regex_automata"
+              },
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "regex-automata 0.4.6",
+                "target": "regex_automata"
+              },
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "regex-automata 0.4.6",
+                "target": "regex_automata"
+              },
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "regex-automata 0.4.6",
+                "target": "regex_automata"
+              },
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "regex-automata 0.4.6",
+                "target": "regex_automata"
+              },
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "1.10.4"
@@ -1659,7 +3098,103 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "perf",
+          "regex-syntax/default",
+          "std",
+          "unicode"
+        ],
+        "logging": [
+          "aho-corasick?/logging",
+          "memchr?/logging",
+          "regex-automata/logging"
+        ],
+        "pattern": [],
+        "perf": [
+          "perf-backtrack",
+          "perf-cache",
+          "perf-dfa",
+          "perf-inline",
+          "perf-literal",
+          "perf-onepass"
+        ],
+        "perf-backtrack": [
+          "regex-automata/nfa-backtrack"
+        ],
+        "perf-cache": [],
+        "perf-dfa": [
+          "regex-automata/hybrid"
+        ],
+        "perf-dfa-full": [
+          "regex-automata/dfa-build",
+          "regex-automata/dfa-search"
+        ],
+        "perf-inline": [
+          "regex-automata/perf-inline"
+        ],
+        "perf-literal": [
+          "dep:aho-corasick",
+          "dep:memchr",
+          "regex-automata/perf-literal"
+        ],
+        "perf-onepass": [
+          "regex-automata/dfa-onepass"
+        ],
+        "std": [
+          "aho-corasick?/std",
+          "memchr?/std",
+          "regex-automata/std",
+          "regex-syntax/std"
+        ],
+        "unicode": [
+          "regex-automata/unicode",
+          "regex-syntax/unicode",
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment"
+        ],
+        "unicode-age": [
+          "regex-automata/unicode-age",
+          "regex-syntax/unicode-age"
+        ],
+        "unicode-bool": [
+          "regex-automata/unicode-bool",
+          "regex-syntax/unicode-bool"
+        ],
+        "unicode-case": [
+          "regex-automata/unicode-case",
+          "regex-syntax/unicode-case"
+        ],
+        "unicode-gencat": [
+          "regex-automata/unicode-gencat",
+          "regex-syntax/unicode-gencat"
+        ],
+        "unicode-perl": [
+          "regex-automata/unicode-perl",
+          "regex-automata/unicode-word-boundary",
+          "regex-syntax/unicode-perl"
+        ],
+        "unicode-script": [
+          "regex-automata/unicode-script",
+          "regex-syntax/unicode-script"
+        ],
+        "unicode-segment": [
+          "regex-automata/unicode-segment",
+          "regex-syntax/unicode-segment"
+        ],
+        "unstable": [
+          "pattern"
+        ],
+        "use_std": [
+          "std"
+        ]
+      }
     },
     "regex-automata 0.4.6": {
       "name": "regex-automata",
@@ -1687,6 +3222,13 @@
       ],
       "library_target_name": "regex_automata",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1711,13 +3253,39 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "regex-syntax 0.8.3",
-              "target": "regex_syntax"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "regex-syntax 0.8.3",
+                "target": "regex_syntax"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "0.4.6"
@@ -1727,7 +3295,127 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "alloc": [],
+        "default": [
+          "dfa",
+          "hybrid",
+          "meta",
+          "nfa",
+          "perf",
+          "std",
+          "syntax",
+          "unicode"
+        ],
+        "dfa": [
+          "dfa-build",
+          "dfa-onepass",
+          "dfa-search"
+        ],
+        "dfa-build": [
+          "dfa-search",
+          "nfa-thompson"
+        ],
+        "dfa-onepass": [
+          "nfa-thompson"
+        ],
+        "dfa-search": [],
+        "hybrid": [
+          "alloc",
+          "nfa-thompson"
+        ],
+        "internal-instrument": [
+          "internal-instrument-pikevm"
+        ],
+        "internal-instrument-pikevm": [
+          "logging",
+          "std"
+        ],
+        "logging": [
+          "aho-corasick?/logging",
+          "dep:log",
+          "memchr?/logging"
+        ],
+        "meta": [
+          "nfa-pikevm",
+          "syntax"
+        ],
+        "nfa": [
+          "nfa-backtrack",
+          "nfa-pikevm",
+          "nfa-thompson"
+        ],
+        "nfa-backtrack": [
+          "nfa-thompson"
+        ],
+        "nfa-pikevm": [
+          "nfa-thompson"
+        ],
+        "nfa-thompson": [
+          "alloc"
+        ],
+        "perf": [
+          "perf-inline",
+          "perf-literal"
+        ],
+        "perf-inline": [],
+        "perf-literal": [
+          "perf-literal-multisubstring",
+          "perf-literal-substring"
+        ],
+        "perf-literal-multisubstring": [
+          "dep:aho-corasick",
+          "std"
+        ],
+        "perf-literal-substring": [
+          "aho-corasick?/perf-literal",
+          "dep:memchr"
+        ],
+        "std": [
+          "aho-corasick?/std",
+          "alloc",
+          "memchr?/std",
+          "regex-syntax?/std"
+        ],
+        "syntax": [
+          "alloc",
+          "dep:regex-syntax"
+        ],
+        "unicode": [
+          "regex-syntax?/unicode",
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment",
+          "unicode-word-boundary"
+        ],
+        "unicode-age": [
+          "regex-syntax?/unicode-age"
+        ],
+        "unicode-bool": [
+          "regex-syntax?/unicode-bool"
+        ],
+        "unicode-case": [
+          "regex-syntax?/unicode-case"
+        ],
+        "unicode-gencat": [
+          "regex-syntax?/unicode-gencat"
+        ],
+        "unicode-perl": [
+          "regex-syntax?/unicode-perl"
+        ],
+        "unicode-script": [
+          "regex-syntax?/unicode-script"
+        ],
+        "unicode-segment": [
+          "regex-syntax?/unicode-segment"
+        ],
+        "unicode-word-boundary": []
+      }
     },
     "regex-syntax 0.8.3": {
       "name": "regex-syntax",
@@ -1755,6 +3443,13 @@
       ],
       "library_target_name": "regex_syntax",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1780,7 +3475,33 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "arbitrary": [
+          "dep:arbitrary"
+        ],
+        "default": [
+          "std",
+          "unicode"
+        ],
+        "std": [],
+        "unicode": [
+          "unicode-age",
+          "unicode-bool",
+          "unicode-case",
+          "unicode-gencat",
+          "unicode-perl",
+          "unicode-script",
+          "unicode-segment"
+        ],
+        "unicode-age": [],
+        "unicode-bool": [],
+        "unicode-case": [],
+        "unicode-gencat": [],
+        "unicode-perl": [],
+        "unicode-script": [],
+        "unicode-segment": []
+      }
     },
     "rustc-hash 1.1.0": {
       "name": "rustc-hash",
@@ -1808,6 +3529,13 @@
       ],
       "library_target_name": "rustc_hash",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1826,7 +3554,13 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "std"
+        ],
+        "std": []
+      }
     },
     "shlex 1.3.0": {
       "name": "shlex",
@@ -1854,6 +3588,13 @@
       ],
       "library_target_name": "shlex",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1872,7 +3613,13 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "default": [
+          "std"
+        ],
+        "std": []
+      }
     },
     "syn 2.0.60": {
       "name": "syn",
@@ -1900,6 +3647,13 @@
       ],
       "library_target_name": "syn",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -1918,21 +3672,79 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "proc-macro2 1.0.81",
-              "target": "proc_macro2"
-            },
-            {
-              "id": "quote 1.0.36",
-              "target": "quote"
-            },
-            {
-              "id": "unicode-ident 1.0.12",
-              "target": "unicode_ident"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "proc-macro2 1.0.81",
+                "target": "proc_macro2"
+              },
+              {
+                "id": "quote 1.0.36",
+                "target": "quote"
+              },
+              {
+                "id": "unicode-ident 1.0.12",
+                "target": "unicode_ident"
+              }
+            ]
+          }
         },
         "edition": "2021",
         "version": "2.0.60"
@@ -1942,7 +3754,34 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "clone-impls": [],
+        "default": [
+          "clone-impls",
+          "derive",
+          "parsing",
+          "printing",
+          "proc-macro"
+        ],
+        "derive": [],
+        "extra-traits": [],
+        "fold": [],
+        "full": [],
+        "parsing": [],
+        "printing": [
+          "dep:quote"
+        ],
+        "proc-macro": [
+          "proc-macro2/proc-macro",
+          "quote?/proc-macro"
+        ],
+        "test": [
+          "syn-test-suite/all-features"
+        ],
+        "visit": [],
+        "visit-mut": []
+      }
     },
     "unicode-ident 1.0.12": {
       "name": "unicode-ident",
@@ -1970,6 +3809,13 @@
       ],
       "library_target_name": "unicode_ident",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -2022,6 +3868,9 @@
       ],
       "library_target_name": "winapi",
       "common_attrs": {
+        "build_targets": [
+          "x86_64-pc-windows-msvc"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -2047,20 +3896,7 @@
               "target": "build_script_build"
             }
           ],
-          "selects": {
-            "i686-pc-windows-gnu": [
-              {
-                "id": "winapi-i686-pc-windows-gnu 0.4.0",
-                "target": "winapi_i686_pc_windows_gnu"
-              }
-            ],
-            "x86_64-pc-windows-gnu": [
-              {
-                "id": "winapi-x86_64-pc-windows-gnu 0.4.0",
-                "target": "winapi_x86_64_pc_windows_gnu"
-              }
-            ]
-          }
+          "selects": {}
         },
         "edition": "2015",
         "version": "0.3.9"
@@ -2081,149 +3917,410 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "winapi-i686-pc-windows-gnu 0.4.0": {
-      "name": "winapi-i686-pc-windows-gnu",
-      "version": "0.4.0",
-      "package_url": "https://github.com/retep998/winapi-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0/download",
-          "sha256": "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winapi_i686_pc_windows_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "winapi_i686_pc_windows_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "accctrl": [],
+        "aclapi": [],
+        "activation": [],
+        "adhoc": [],
+        "appmgmt": [],
+        "audioclient": [],
+        "audiosessiontypes": [],
+        "avrt": [],
+        "basetsd": [],
+        "bcrypt": [],
+        "bits": [],
+        "bits10_1": [],
+        "bits1_5": [],
+        "bits2_0": [],
+        "bits2_5": [],
+        "bits3_0": [],
+        "bits4_0": [],
+        "bits5_0": [],
+        "bitscfg": [],
+        "bitsmsg": [],
+        "bluetoothapis": [],
+        "bluetoothleapis": [],
+        "bthdef": [],
+        "bthioctl": [],
+        "bthledef": [],
+        "bthsdpdef": [],
+        "bugcodes": [],
+        "cderr": [],
+        "cfg": [],
+        "cfgmgr32": [],
+        "cguid": [],
+        "combaseapi": [],
+        "coml2api": [],
+        "commapi": [],
+        "commctrl": [],
+        "commdlg": [],
+        "commoncontrols": [],
+        "consoleapi": [],
+        "corecrt": [],
+        "corsym": [],
+        "d2d1": [],
+        "d2d1_1": [],
+        "d2d1_2": [],
+        "d2d1_3": [],
+        "d2d1effectauthor": [],
+        "d2d1effects": [],
+        "d2d1effects_1": [],
+        "d2d1effects_2": [],
+        "d2d1svg": [],
+        "d2dbasetypes": [],
+        "d3d": [],
+        "d3d10": [],
+        "d3d10_1": [],
+        "d3d10_1shader": [],
+        "d3d10effect": [],
+        "d3d10misc": [],
+        "d3d10sdklayers": [],
+        "d3d10shader": [],
+        "d3d11": [],
+        "d3d11_1": [],
+        "d3d11_2": [],
+        "d3d11_3": [],
+        "d3d11_4": [],
+        "d3d11on12": [],
+        "d3d11sdklayers": [],
+        "d3d11shader": [],
+        "d3d11tokenizedprogramformat": [],
+        "d3d12": [],
+        "d3d12sdklayers": [],
+        "d3d12shader": [],
+        "d3d9": [],
+        "d3d9caps": [],
+        "d3d9types": [],
+        "d3dcommon": [],
+        "d3dcompiler": [],
+        "d3dcsx": [],
+        "d3dkmdt": [],
+        "d3dkmthk": [],
+        "d3dukmdt": [],
+        "d3dx10core": [],
+        "d3dx10math": [],
+        "d3dx10mesh": [],
+        "datetimeapi": [],
+        "davclnt": [],
+        "dbghelp": [],
+        "dbt": [],
+        "dcommon": [],
+        "dcomp": [],
+        "dcompanimation": [],
+        "dcomptypes": [],
+        "dde": [],
+        "ddraw": [],
+        "ddrawi": [],
+        "ddrawint": [],
+        "debug": [
+          "impl-debug"
         ],
-        "deps": {
-          "common": [
-            {
-              "id": "winapi-i686-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.4.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
-    },
-    "winapi-x86_64-pc-windows-gnu 0.4.0": {
-      "name": "winapi-x86_64-pc-windows-gnu",
-      "version": "0.4.0",
-      "package_url": "https://github.com/retep998/winapi-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/winapi-x86_64-pc-windows-gnu/0.4.0/download",
-          "sha256": "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "winapi_x86_64_pc_windows_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "winapi_x86_64_pc_windows_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "winapi-x86_64-pc-windows-gnu 0.4.0",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2015",
-        "version": "0.4.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT/Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": null
+        "debugapi": [],
+        "devguid": [],
+        "devicetopology": [],
+        "devpkey": [],
+        "devpropdef": [],
+        "dinput": [],
+        "dinputd": [],
+        "dispex": [],
+        "dmksctl": [],
+        "dmusicc": [],
+        "docobj": [],
+        "documenttarget": [],
+        "dot1x": [],
+        "dpa_dsa": [],
+        "dpapi": [],
+        "dsgetdc": [],
+        "dsound": [],
+        "dsrole": [],
+        "dvp": [],
+        "dwmapi": [],
+        "dwrite": [],
+        "dwrite_1": [],
+        "dwrite_2": [],
+        "dwrite_3": [],
+        "dxdiag": [],
+        "dxfile": [],
+        "dxgi": [],
+        "dxgi1_2": [],
+        "dxgi1_3": [],
+        "dxgi1_4": [],
+        "dxgi1_5": [],
+        "dxgi1_6": [],
+        "dxgidebug": [],
+        "dxgiformat": [],
+        "dxgitype": [],
+        "dxva2api": [],
+        "dxvahd": [],
+        "eaptypes": [],
+        "enclaveapi": [],
+        "endpointvolume": [],
+        "errhandlingapi": [],
+        "everything": [],
+        "evntcons": [],
+        "evntprov": [],
+        "evntrace": [],
+        "excpt": [],
+        "exdisp": [],
+        "fibersapi": [],
+        "fileapi": [],
+        "functiondiscoverykeys_devpkey": [],
+        "gl-gl": [],
+        "guiddef": [],
+        "handleapi": [],
+        "heapapi": [],
+        "hidclass": [],
+        "hidpi": [],
+        "hidsdi": [],
+        "hidusage": [],
+        "highlevelmonitorconfigurationapi": [],
+        "hstring": [],
+        "http": [],
+        "ifdef": [],
+        "ifmib": [],
+        "imm": [],
+        "impl-debug": [],
+        "impl-default": [],
+        "in6addr": [],
+        "inaddr": [],
+        "inspectable": [],
+        "interlockedapi": [],
+        "intsafe": [],
+        "ioapiset": [],
+        "ipexport": [],
+        "iphlpapi": [],
+        "ipifcons": [],
+        "ipmib": [],
+        "iprtrmib": [],
+        "iptypes": [],
+        "jobapi": [],
+        "jobapi2": [],
+        "knownfolders": [],
+        "ks": [],
+        "ksmedia": [],
+        "ktmtypes": [],
+        "ktmw32": [],
+        "l2cmn": [],
+        "libloaderapi": [],
+        "limits": [],
+        "lmaccess": [],
+        "lmalert": [],
+        "lmapibuf": [],
+        "lmat": [],
+        "lmcons": [],
+        "lmdfs": [],
+        "lmerrlog": [],
+        "lmjoin": [],
+        "lmmsg": [],
+        "lmremutl": [],
+        "lmrepl": [],
+        "lmserver": [],
+        "lmshare": [],
+        "lmstats": [],
+        "lmsvc": [],
+        "lmuse": [],
+        "lmwksta": [],
+        "lowlevelmonitorconfigurationapi": [],
+        "lsalookup": [],
+        "memoryapi": [],
+        "minschannel": [],
+        "minwinbase": [],
+        "minwindef": [],
+        "mmdeviceapi": [],
+        "mmeapi": [],
+        "mmreg": [],
+        "mmsystem": [],
+        "mprapidef": [],
+        "msaatext": [],
+        "mscat": [],
+        "mschapp": [],
+        "mssip": [],
+        "mstcpip": [],
+        "mswsock": [],
+        "mswsockdef": [],
+        "namedpipeapi": [],
+        "namespaceapi": [],
+        "nb30": [],
+        "ncrypt": [],
+        "netioapi": [],
+        "nldef": [],
+        "ntddndis": [],
+        "ntddscsi": [],
+        "ntddser": [],
+        "ntdef": [],
+        "ntlsa": [],
+        "ntsecapi": [],
+        "ntstatus": [],
+        "oaidl": [],
+        "objbase": [],
+        "objidl": [],
+        "objidlbase": [],
+        "ocidl": [],
+        "ole2": [],
+        "oleauto": [],
+        "olectl": [],
+        "oleidl": [],
+        "opmapi": [],
+        "pdh": [],
+        "perflib": [],
+        "physicalmonitorenumerationapi": [],
+        "playsoundapi": [],
+        "portabledevice": [],
+        "portabledeviceapi": [],
+        "portabledevicetypes": [],
+        "powerbase": [],
+        "powersetting": [],
+        "powrprof": [],
+        "processenv": [],
+        "processsnapshot": [],
+        "processthreadsapi": [],
+        "processtopologyapi": [],
+        "profileapi": [],
+        "propidl": [],
+        "propkey": [],
+        "propkeydef": [],
+        "propsys": [],
+        "prsht": [],
+        "psapi": [],
+        "qos": [],
+        "realtimeapiset": [],
+        "reason": [],
+        "restartmanager": [],
+        "restrictederrorinfo": [],
+        "rmxfguid": [],
+        "roapi": [],
+        "robuffer": [],
+        "roerrorapi": [],
+        "rpc": [],
+        "rpcdce": [],
+        "rpcndr": [],
+        "rtinfo": [],
+        "sapi": [],
+        "sapi51": [],
+        "sapi53": [],
+        "sapiddk": [],
+        "sapiddk51": [],
+        "schannel": [],
+        "sddl": [],
+        "securityappcontainer": [],
+        "securitybaseapi": [],
+        "servprov": [],
+        "setupapi": [],
+        "shellapi": [],
+        "shellscalingapi": [],
+        "shlobj": [],
+        "shobjidl": [],
+        "shobjidl_core": [],
+        "shtypes": [],
+        "softpub": [],
+        "spapidef": [],
+        "spellcheck": [],
+        "sporder": [],
+        "sql": [],
+        "sqlext": [],
+        "sqltypes": [],
+        "sqlucode": [],
+        "sspi": [],
+        "std": [],
+        "stralign": [],
+        "stringapiset": [],
+        "strmif": [],
+        "subauth": [],
+        "synchapi": [],
+        "sysinfoapi": [],
+        "systemtopologyapi": [],
+        "taskschd": [],
+        "tcpestats": [],
+        "tcpmib": [],
+        "textstor": [],
+        "threadpoolapiset": [],
+        "threadpoollegacyapiset": [],
+        "timeapi": [],
+        "timezoneapi": [],
+        "tlhelp32": [],
+        "transportsettingcommon": [],
+        "tvout": [],
+        "udpmib": [],
+        "unknwnbase": [],
+        "urlhist": [],
+        "urlmon": [],
+        "usb": [],
+        "usbioctl": [],
+        "usbiodef": [],
+        "usbscan": [],
+        "usbspec": [],
+        "userenv": [],
+        "usp10": [],
+        "utilapiset": [],
+        "uxtheme": [],
+        "vadefs": [],
+        "vcruntime": [],
+        "vsbackup": [],
+        "vss": [],
+        "vsserror": [],
+        "vswriter": [],
+        "wbemads": [],
+        "wbemcli": [],
+        "wbemdisp": [],
+        "wbemprov": [],
+        "wbemtran": [],
+        "wct": [],
+        "werapi": [],
+        "winbase": [],
+        "wincodec": [],
+        "wincodecsdk": [],
+        "wincon": [],
+        "wincontypes": [],
+        "wincred": [],
+        "wincrypt": [],
+        "windef": [],
+        "windot11": [],
+        "windowsceip": [],
+        "windowsx": [],
+        "winefs": [],
+        "winerror": [],
+        "winevt": [],
+        "wingdi": [],
+        "winhttp": [],
+        "wininet": [],
+        "winineti": [],
+        "winioctl": [],
+        "winnetwk": [],
+        "winnls": [],
+        "winnt": [],
+        "winreg": [],
+        "winsafer": [],
+        "winscard": [],
+        "winsmcrd": [],
+        "winsock2": [],
+        "winspool": [],
+        "winstring": [],
+        "winsvc": [],
+        "wintrust": [],
+        "winusb": [],
+        "winusbio": [],
+        "winuser": [],
+        "winver": [],
+        "wlanapi": [],
+        "wlanihv": [],
+        "wlanihvtypes": [],
+        "wlantypes": [],
+        "wlclient": [],
+        "wmistr": [],
+        "wnnc": [],
+        "wow64apiset": [],
+        "wpdmtpextensions": [],
+        "ws2bth": [],
+        "ws2def": [],
+        "ws2ipdef": [],
+        "ws2spi": [],
+        "ws2tcpip": [],
+        "wtsapi32": [],
+        "wtypes": [],
+        "wtypesbase": [],
+        "xinput": []
+      }
     },
     "windows-targets 0.52.5": {
       "name": "windows-targets",
@@ -2251,561 +4348,25 @@
       ],
       "library_target_name": "windows_targets",
       "common_attrs": {
+        "build_targets": [
+          "x86_64-pc-windows-msvc"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
           "common": [],
           "selects": {
-            "aarch64-pc-windows-gnullvm": [
-              {
-                "id": "windows_aarch64_gnullvm 0.52.5",
-                "target": "windows_aarch64_gnullvm"
-              }
-            ],
             "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": [
               {
                 "id": "windows_x86_64_msvc 0.52.5",
                 "target": "windows_x86_64_msvc"
-              }
-            ],
-            "cfg(all(target_arch = \"aarch64\", target_env = \"msvc\", not(windows_raw_dylib)))": [
-              {
-                "id": "windows_aarch64_msvc 0.52.5",
-                "target": "windows_aarch64_msvc"
-              }
-            ],
-            "cfg(all(target_arch = \"x86\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
-              {
-                "id": "windows_i686_gnu 0.52.5",
-                "target": "windows_i686_gnu"
-              }
-            ],
-            "cfg(all(target_arch = \"x86\", target_env = \"msvc\", not(windows_raw_dylib)))": [
-              {
-                "id": "windows_i686_msvc 0.52.5",
-                "target": "windows_i686_msvc"
-              }
-            ],
-            "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
-              {
-                "id": "windows_x86_64_gnu 0.52.5",
-                "target": "windows_x86_64_gnu"
-              }
-            ],
-            "i686-pc-windows-gnullvm": [
-              {
-                "id": "windows_i686_gnullvm 0.52.5",
-                "target": "windows_i686_gnullvm"
-              }
-            ],
-            "x86_64-pc-windows-gnullvm": [
-              {
-                "id": "windows_x86_64_gnullvm 0.52.5",
-                "target": "windows_x86_64_gnullvm"
               }
             ]
           }
         },
         "edition": "2021",
         "version": "0.52.5"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_aarch64_gnullvm 0.52.5": {
-      "name": "windows_aarch64_gnullvm",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_aarch64_gnullvm/0.52.5/download",
-          "sha256": "7088eed71e8b8dda258ecc8bac5fb1153c5cffaf2578fc8ff5d61e23578d3263"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_aarch64_gnullvm",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_aarch64_gnullvm",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_aarch64_gnullvm 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_aarch64_msvc 0.52.5": {
-      "name": "windows_aarch64_msvc",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_aarch64_msvc/0.52.5/download",
-          "sha256": "9985fd1504e250c615ca5f281c3f7a6da76213ebd5ccc9561496568a2752afb6"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_aarch64_msvc",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_aarch64_msvc",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_aarch64_msvc 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_i686_gnu 0.52.5": {
-      "name": "windows_i686_gnu",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_i686_gnu/0.52.5/download",
-          "sha256": "88ba073cf16d5372720ec942a8ccbf61626074c6d4dd2e745299726ce8b89670"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_i686_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_i686_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_i686_gnu 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_i686_gnullvm 0.52.5": {
-      "name": "windows_i686_gnullvm",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_i686_gnullvm/0.52.5/download",
-          "sha256": "87f4261229030a858f36b459e748ae97545d6f1ec60e5e0d6a3d32e0dc232ee9"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_i686_gnullvm",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_i686_gnullvm",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_i686_gnullvm 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_i686_msvc 0.52.5": {
-      "name": "windows_i686_msvc",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_i686_msvc/0.52.5/download",
-          "sha256": "db3c2bf3d13d5b658be73463284eaf12830ac9a26a90c717b7f771dfe97487bf"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_i686_msvc",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_i686_msvc",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_i686_msvc 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_x86_64_gnu 0.52.5": {
-      "name": "windows_x86_64_gnu",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_x86_64_gnu/0.52.5/download",
-          "sha256": "4e4246f76bdeff09eb48875a0fd3e2af6aada79d409d33011886d3e1581517d9"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_x86_64_gnu",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_x86_64_gnu",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_x86_64_gnu 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "license-apache-2.0"
-    },
-    "windows_x86_64_gnullvm 0.52.5": {
-      "name": "windows_x86_64_gnullvm",
-      "version": "0.52.5",
-      "package_url": "https://github.com/microsoft/windows-rs",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/windows_x86_64_gnullvm/0.52.5/download",
-          "sha256": "852298e482cd67c356ddd9570386e2862b5673c85bd5f88df9ab6802b334c596"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "windows_x86_64_gnullvm",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "windows_x86_64_gnullvm",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "windows_x86_64_gnullvm 0.52.5",
-              "target": "build_script_build"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "0.52.5"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2852,6 +4413,9 @@
       ],
       "library_target_name": "windows_x86_64_msvc",
       "common_attrs": {
+        "build_targets": [
+          "x86_64-pc-windows-msvc"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -2894,19 +4458,11 @@
     "aarch64-apple-darwin": [
       "aarch64-apple-darwin"
     ],
-    "aarch64-pc-windows-gnullvm": [],
     "aarch64-unknown-linux-gnu": [
       "aarch64-unknown-linux-gnu"
     ],
     "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": [
       "x86_64-pc-windows-msvc"
-    ],
-    "cfg(all(target_arch = \"aarch64\", target_env = \"msvc\", not(windows_raw_dylib)))": [],
-    "cfg(all(target_arch = \"x86\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [],
-    "cfg(all(target_arch = \"x86\", target_env = \"msvc\", not(windows_raw_dylib)))": [],
-    "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": [
-      "x86_64-unknown-linux-gnu",
-      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(unix)": [
       "aarch64-apple-darwin",
@@ -2917,21 +4473,18 @@
     "cfg(windows)": [
       "x86_64-pc-windows-msvc"
     ],
-    "i686-pc-windows-gnu": [],
-    "i686-pc-windows-gnullvm": [],
     "wasm32-unknown-unknown": [
       "wasm32-unknown-unknown"
     ],
     "wasm32-wasip1": [
       "wasm32-wasip1"
     ],
-    "x86_64-pc-windows-gnu": [],
-    "x86_64-pc-windows-gnullvm": [],
     "x86_64-pc-windows-msvc": [
       "x86_64-pc-windows-msvc"
     ],
     "x86_64-unknown-linux-gnu": [
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "x86_64-unknown-nixos-gnu": [
       "x86_64-unknown-nixos-gnu"

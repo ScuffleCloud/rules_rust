@@ -25,6 +25,7 @@ def crate_repositories():
         name = "rules_rust_ctve",
         build_file = Label("//cargo/cargo_toml_variable_extractor/3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//cargo/cargo_toml_variable_extractor/3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//cargo/cargo_toml_variable_extractor/3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "rules_rust_ctve", is_dev_dep = False)]

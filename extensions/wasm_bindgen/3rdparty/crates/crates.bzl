@@ -25,6 +25,7 @@ def crate_repositories():
         name = "rrwbd",
         build_file = Label("//3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "rrwbd", is_dev_dep = False)]

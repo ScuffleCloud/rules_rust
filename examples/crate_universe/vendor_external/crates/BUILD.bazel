@@ -44,18 +44,6 @@ alias(
 )
 
 alias(
-    name = "names-0.13.0",
-    actual = "@crates_vendor__names-0.13.0//:names",
-    tags = ["manual"],
-)
-
-alias(
-    name = "names",
-    actual = "@crates_vendor__names-0.13.0//:names",
-    tags = ["manual"],
-)
-
-alias(
     name = "rand-0.8.5",
     actual = "@crates_vendor__rand-0.8.5//:rand",
     tags = ["manual"],

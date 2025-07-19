@@ -36,7 +36,7 @@ cargo_internal_deps = use_extension("//cargo/private:internal_extensions.bzl", "
 use_repo(
     cargo_internal_deps,
     "rrcti",
-    "rrcti__cargo_toml-0.20.5",
+    "rrcti__cargo_toml-0.22.1",
     "rules_rust_ctve",
     "rules_rust_ctve__cargo-util-schemas-0.3.1",
     "rules_rust_ctve__pathdiff-0.1.0",
