@@ -61,31 +61,31 @@ rust_library(
         "unicode-word-boundary",
     ] + select({
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "dfa-search",  # aarch64-unknown-linux-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "dfa-search",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "dfa-search",  # arm-unknown-linux-gnueabi
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "dfa-search",  # armv7-unknown-linux-gnueabi
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "dfa-search",  # i686-unknown-linux-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "dfa-search",  # powerpc-unknown-linux-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "dfa-search",  # s390x-unknown-linux-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "dfa-search",  # x86_64-unknown-linux-gnu
+            "dfa-search",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "dfa-search",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "dfa-search",
         ],
         "//conditions:default": [],
     }),

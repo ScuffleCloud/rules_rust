@@ -25,6 +25,7 @@ def crate_repositories():
         name = "cvm",
         build_file = Label("//vendor_remote_manifests/crates:BUILD.bazel"),
         defs_module = Label("//vendor_remote_manifests/crates:defs.bzl"),
+        alias_rules_module = Label("//vendor_remote_manifests/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "cvm", is_dev_dep = False)]

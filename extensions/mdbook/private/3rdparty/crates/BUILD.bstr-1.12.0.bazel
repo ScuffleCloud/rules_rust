@@ -39,40 +39,40 @@ rust_library(
         "std",
     ] + select({
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "default",  # aarch64-unknown-linux-gnu
-            "unicode",  # aarch64-unknown-linux-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "default",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
-            "unicode",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "default",  # arm-unknown-linux-gnueabi
-            "unicode",  # arm-unknown-linux-gnueabi
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "default",  # armv7-unknown-linux-gnueabi
-            "unicode",  # armv7-unknown-linux-gnueabi
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "default",  # i686-unknown-linux-gnu
-            "unicode",  # i686-unknown-linux-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "default",  # powerpc-unknown-linux-gnu
-            "unicode",  # powerpc-unknown-linux-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "default",  # s390x-unknown-linux-gnu
-            "unicode",  # s390x-unknown-linux-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "default",  # x86_64-unknown-linux-gnu
-            "unicode",  # x86_64-unknown-linux-gnu
+            "default",
+            "unicode",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "default",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
-            "unicode",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "default",
+            "unicode",
         ],
         "//conditions:default": [],
     }),
@@ -135,31 +135,31 @@ rust_library(
         "@rmdbi__memchr-2.7.5//:memchr",
     ] + select({
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # aarch64-unknown-linux-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # arm-unknown-linux-gnueabi
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # armv7-unknown-linux-gnueabi
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # i686-unknown-linux-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # powerpc-unknown-linux-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # s390x-unknown-linux-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # x86_64-unknown-linux-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "@rmdbi__regex-automata-0.4.9//:regex_automata",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "@rmdbi__regex-automata-0.4.9//:regex_automata",
         ],
         "//conditions:default": [],
     }),

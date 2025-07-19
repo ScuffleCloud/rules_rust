@@ -28,6 +28,7 @@ rust_library(
     ),
     aliases = {
         "@rrwbd__rustls-pki-types-1.10.1//:rustls_pki_types": "pki_types",
+        "@rrwbd__rustls-webpki-0.102.8//:webpki": "webpki",
     },
     compile_data = glob(
         include = ["**"],

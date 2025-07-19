@@ -434,20 +434,20 @@ def get_linker_and_args(ctx, crate_type, cc_toolchain, feature_configuration, rp
     """
     user_link_flags = get_cc_user_link_flags(ctx)
 
-    if crate_type in ("bin") or add_flags_for_binary:
+    if crate_type in ["bin"] or add_flags_for_binary:
         is_linking_dynamic_library = False
         action_name = CPP_LINK_EXECUTABLE_ACTION_NAME
-    elif crate_type in ("dylib"):
+    elif crate_type in ["dylib"]:
         is_linking_dynamic_library = True
         action_name = CPP_LINK_NODEPS_DYNAMIC_LIBRARY_ACTION_NAME
-    elif crate_type in ("staticlib"):
+    elif crate_type in ["staticlib"]:
         is_linking_dynamic_library = False
         action_name = CPP_LINK_STATIC_LIBRARY_ACTION_NAME
-    elif crate_type in ("cdylib", "proc-macro"):
+    elif crate_type in ["cdylib", "proc-macro"]:
         # Proc macros get compiled as shared libraries to be loaded by the compiler.
         is_linking_dynamic_library = True
         action_name = CPP_LINK_DYNAMIC_LIBRARY_ACTION_NAME
-    elif crate_type in ("lib", "rlib"):
+    elif crate_type in ["lib", "rlib"]:
         fail("Invalid `crate_type` for linking action: {}".format(crate_type))
     else:
         fail("Unknown `crate_type`: {}".format(crate_type))
@@ -950,9 +950,12 @@ def construct_arguments(
     rustc_flags = ctx.actions.args()
     rustc_flags.set_param_file_format("multiline")
     rustc_flags.use_param_file("@%s", use_always = False)
-    rustc_flags.add(crate_info.root)
-    rustc_flags.add(crate_info.name, format = "--crate-name=%s")
-    rustc_flags.add(crate_info.type, format = "--crate-type=%s")
+    if crate_info.root:
+        rustc_flags.add(crate_info.root)
+    if crate_info.name:
+        rustc_flags.add(crate_info.name, format = "--crate-name=%s")
+    if crate_info.type:
+        rustc_flags.add(crate_info.type, format = "--crate-type=%s")
 
     if error_format == None:
         error_format = get_error_format(attr, "_error_format")
@@ -1856,7 +1859,7 @@ def add_edition_flags(args, crate):
         args (Args): A reference to an Args object
         crate (CrateInfo): A CrateInfo provider
     """
-    if crate.edition != "2015":
+    if crate.edition and crate.edition != "2015":
         args.add(crate.edition, format = "--edition=%s")
 
 def _create_extra_input_args(build_info, dep_info, include_link_flags = True):

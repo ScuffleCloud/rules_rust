@@ -1,5 +1,5 @@
 {
-  "checksum": "5aec3c8b998312cad402a1792c2f281743f9b57fd6213e327de2837573ba2b1a",
+  "checksum": "1cc03f6206175105a4eccf875c5827488d84065aac65a2511dec39926c699fb5",
   "crates": {
     "autocfg 1.1.0": {
       "name": "autocfg",
@@ -27,6 +27,13 @@
       ],
       "library_target_name": "autocfg",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -66,6 +73,11 @@
       ],
       "library_target_name": "bitflags",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -83,7 +95,21 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "default": [],
+        "example_generated": [],
+        "rustc-dep-of-std": [
+          "compiler_builtins",
+          "core"
+        ]
+      }
     },
     "cfg-if 1.0.0": {
       "name": "cfg-if",
@@ -111,6 +137,11 @@
       ],
       "library_target_name": "cfg_if",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -122,7 +153,19 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "compiler_builtins": [
+          "dep:compiler_builtins"
+        ],
+        "core": [
+          "dep:core"
+        ],
+        "rustc-dep-of-std": [
+          "compiler_builtins",
+          "core"
+        ]
+      }
     },
     "conditional-deps 0.1.0": {
       "name": "conditional-deps",
@@ -132,6 +175,15 @@
       "targets": [],
       "library_target_name": null,
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -151,7 +203,22 @@
       },
       "license": null,
       "license_ids": [],
-      "license_file": null
+      "license_file": null,
+      "feature_dep_maps": {
+        "deps": {
+          "required": {
+            "common": [],
+            "selects": {
+              "cfg(target_os = \"linux\")": [
+                {
+                  "id": "nix 0.26.2",
+                  "target": "nix"
+                }
+              ]
+            }
+          }
+        }
+      }
     },
     "libc 0.2.146": {
       "name": "libc",
@@ -191,6 +258,11 @@
       ],
       "library_target_name": "libc",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -230,7 +302,26 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "align": [],
+        "const-extern-fn": [],
+        "default": [
+          "std"
+        ],
+        "extra_traits": [],
+        "rustc-dep-of-std": [
+          "align",
+          "rustc-std-workspace-core"
+        ],
+        "rustc-std-workspace-core": [
+          "dep:rustc-std-workspace-core"
+        ],
+        "std": [],
+        "use_std": [
+          "std"
+        ]
+      }
     },
     "memoffset 0.7.1": {
       "name": "memoffset",
@@ -270,6 +361,11 @@
       ],
       "library_target_name": "memoffset",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -302,20 +398,38 @@
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "autocfg 1.1.0",
-              "target": "autocfg"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "autocfg 1.1.0",
+                "target": "autocfg"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "autocfg 1.1.0",
+                "target": "autocfg"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "autocfg 1.1.0",
+                "target": "autocfg"
+              }
+            ]
+          }
         }
       },
       "license": "MIT",
       "license_ids": [
         "MIT"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "default": [],
+        "unstable_const": []
+      }
     },
     "nix 0.26.2": {
       "name": "nix",
@@ -343,6 +457,11 @@
       ],
       "library_target_name": "nix",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -387,33 +506,81 @@
           "selects": {}
         },
         "deps": {
-          "common": [
-            {
-              "id": "bitflags 1.3.2",
-              "target": "bitflags"
-            },
-            {
-              "id": "cfg-if 1.0.0",
-              "target": "cfg_if"
-            },
-            {
-              "id": "libc 0.2.146",
-              "target": "libc"
-            },
-            {
-              "id": "memoffset 0.7.1",
-              "target": "memoffset"
-            },
-            {
-              "id": "pin-utils 0.1.0",
-              "target": "pin_utils"
-            },
-            {
-              "id": "static_assertions 1.1.0",
-              "target": "static_assertions"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 1.3.2",
+                "target": "bitflags"
+              },
+              {
+                "id": "cfg-if 1.0.0",
+                "target": "cfg_if"
+              },
+              {
+                "id": "libc 0.2.146",
+                "target": "libc"
+              },
+              {
+                "id": "pin-utils 0.1.0",
+                "target": "pin_utils"
+              },
+              {
+                "id": "static_assertions 1.1.0",
+                "target": "static_assertions"
+              }
+            ],
+            "cfg(not(target_os = \"redox\"))": [
+              {
+                "id": "memoffset 0.7.1",
+                "target": "memoffset"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "bitflags 1.3.2",
+                "target": "bitflags"
+              },
+              {
+                "id": "cfg-if 1.0.0",
+                "target": "cfg_if"
+              },
+              {
+                "id": "libc 0.2.146",
+                "target": "libc"
+              },
+              {
+                "id": "pin-utils 0.1.0",
+                "target": "pin_utils"
+              },
+              {
+                "id": "static_assertions 1.1.0",
+                "target": "static_assertions"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "bitflags 1.3.2",
+                "target": "bitflags"
+              },
+              {
+                "id": "cfg-if 1.0.0",
+                "target": "cfg_if"
+              },
+              {
+                "id": "libc 0.2.146",
+                "target": "libc"
+              },
+              {
+                "id": "pin-utils 0.1.0",
+                "target": "pin_utils"
+              },
+              {
+                "id": "static_assertions 1.1.0",
+                "target": "static_assertions"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.26.2"
@@ -422,7 +589,106 @@
       "license_ids": [
         "MIT"
       ],
-      "license_file": "LICENSE"
+      "license_file": "LICENSE",
+      "crate_features": {
+        "acct": [],
+        "aio": [
+          "pin-utils"
+        ],
+        "default": [
+          "acct",
+          "aio",
+          "dir",
+          "env",
+          "event",
+          "feature",
+          "fs",
+          "hostname",
+          "inotify",
+          "ioctl",
+          "kmod",
+          "mman",
+          "mount",
+          "mqueue",
+          "net",
+          "personality",
+          "poll",
+          "process",
+          "pthread",
+          "ptrace",
+          "quota",
+          "reboot",
+          "resource",
+          "sched",
+          "signal",
+          "socket",
+          "term",
+          "time",
+          "ucontext",
+          "uio",
+          "user",
+          "zerocopy"
+        ],
+        "dir": [
+          "fs"
+        ],
+        "env": [],
+        "event": [],
+        "feature": [],
+        "fs": [],
+        "hostname": [],
+        "inotify": [],
+        "ioctl": [],
+        "kmod": [],
+        "memoffset": [
+          "dep:memoffset"
+        ],
+        "mman": [],
+        "mount": [
+          "uio"
+        ],
+        "mqueue": [
+          "fs"
+        ],
+        "net": [
+          "socket"
+        ],
+        "personality": [],
+        "pin-utils": [
+          "dep:pin-utils"
+        ],
+        "poll": [],
+        "process": [],
+        "pthread": [],
+        "ptrace": [
+          "process"
+        ],
+        "quota": [],
+        "reboot": [],
+        "resource": [],
+        "sched": [
+          "process"
+        ],
+        "signal": [
+          "process"
+        ],
+        "socket": [
+          "memoffset"
+        ],
+        "term": [],
+        "time": [],
+        "ucontext": [
+          "signal"
+        ],
+        "uio": [],
+        "user": [
+          "feature"
+        ],
+        "zerocopy": [
+          "fs",
+          "uio"
+        ]
+      }
     },
     "pin-utils 0.1.0": {
       "name": "pin-utils",
@@ -450,6 +716,11 @@
       ],
       "library_target_name": "pin_utils",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -489,6 +760,11 @@
       ],
       "library_target_name": "static_assertions",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-unknown-linux-gnu",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -500,7 +776,10 @@
         "Apache-2.0",
         "MIT"
       ],
-      "license_file": "LICENSE-APACHE"
+      "license_file": "LICENSE-APACHE",
+      "crate_features": {
+        "nightly": []
+      }
     }
   },
   "binary_crates": [],
@@ -513,6 +792,15 @@
     ],
     "aarch64-unknown-linux-gnu": [
       "aarch64-unknown-linux-gnu"
+    ],
+    "cfg(not(target_os = \"redox\"))": [
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "wasm32-unknown-unknown",
+      "wasm32-wasip1",
+      "x86_64-pc-windows-msvc",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "cfg(target_os = \"linux\")": [
       "aarch64-unknown-linux-gnu",
@@ -529,7 +817,8 @@
       "x86_64-pc-windows-msvc"
     ],
     "x86_64-unknown-linux-gnu": [
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "x86_64-unknown-nixos-gnu": [
       "x86_64-unknown-nixos-gnu"

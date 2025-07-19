@@ -26,17 +26,48 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 # An identifier that represent common dependencies (unconditional).
 _COMMON_CONDITION = ""
 
-def _flatten_dependency_maps(all_dependency_maps):
+# An identifier that represents a requried feature (unconditional).
+_REQUIRED_FEATURE = ""
+
+def _flatten_features(features, enabled_features):
+    """
+    Flatten features of a crate
+
+    Args:
+        features (dict): A map of feature to list of other features
+        enabled_features (list): A list of enabled features
+
+    Returns:
+        set: A set of all enabled features
+    """
+    resolved = set()
+    queue = list(enabled_features)
+
+    for _ in range(10000):
+        if len(queue) == 0:
+            break
+
+        feat = queue.pop()
+        if feat in resolved:
+            continue
+
+        if feat not in features:
+            fail("{} is not apart of the features for this package".format(feat))
+
+        resolved.add(feat)
+        queue.extend(features[feat])
+
+    return resolved
+
+def _flatten_dependency_maps(all_dependency_maps, enabled_features_map):
     """Flatten a list of dependency maps into one dictionary.
 
     Dependency maps have the following structure:
 
     ```python
     DEPENDENCIES_MAP = {
-        # The first key in the map is a Bazel package
-        # name of the workspace this file is defined in.
-        "workspace_member_package": {
-
+        # The first key in the map is a feature flag
+        "feature": {
             # Not all dependencies are supported for all platforms.
             # the condition key is the condition required to be true
             # on the host platform.
@@ -52,36 +83,129 @@ def _flatten_dependency_maps(all_dependency_maps):
 
     Args:
         all_dependency_maps (list): A list of dicts as described above
+        enabled_features_map (list): A list of enabled features
 
     Returns:
         dict: A dictionary as described above
     """
     dependencies = {}
+    feature_conditions = {
+        _COMMON_CONDITION: set(enabled_features_map.get(_COMMON_CONDITION, set())),
+    }
 
-    for workspace_deps_map in all_dependency_maps:
-        for pkg_name, conditional_deps_map in workspace_deps_map.items():
-            if pkg_name not in dependencies:
-                non_frozen_map = dict()
-                for key, values in conditional_deps_map.items():
-                    non_frozen_map.update({key: dict(values.items())})
-                dependencies.setdefault(pkg_name, non_frozen_map)
-                continue
+    for condition, feature in enabled_features_map.items():
+        for condition in _CONDITIONS.get(condition, []):
+            feature_conditions.setdefault(condition, set()).update(feature)
 
+    for feature_deps_map in all_dependency_maps:
+        for feature, conditional_deps_map in feature_deps_map.items():
             for condition, deps_map in conditional_deps_map.items():
-                # If the condition has not been recorded, do so and continue
-                if condition not in dependencies[pkg_name]:
-                    dependencies[pkg_name].setdefault(condition, dict(deps_map.items()))
-                    continue
+                condition_flags = _CONDITIONS[condition] if condition != _COMMON_CONDITION else feature_conditions.keys()
+                for condition in condition_flags:
+                    if feature == _REQUIRED_FEATURE or feature in feature_conditions.get(_COMMON_CONDITION, set()) or feature in feature_conditions.get(condition, set()):
+                        dependencies.setdefault(condition, dict()).update(deps_map)
 
-                # Alert on any miss-matched dependencies
-                inconsistent_entries = []
-                for crate_name, crate_label in deps_map.items():
-                    existing = dependencies[pkg_name][condition].get(crate_name)
-                    if existing and existing != crate_label:
-                        inconsistent_entries.append((crate_name, existing, crate_label))
-                    dependencies[pkg_name][condition].update({crate_name: crate_label})
+    if _COMMON_CONDITION in dependencies:
+        for cond, v in dependencies.items():
+            if cond != _COMMON_CONDITION:
+                for k in dependencies[_COMMON_CONDITION]:
+                    v.pop(k, default = None)
 
     return dependencies
+
+def _make_crate_features(package_name = None):
+    if package_name == None:
+        package_name = native.package_name()
+
+    conditions = {}
+    vtable = {}
+
+    def make_set():
+        return struct(
+            _type = "FeatureMap",
+            conditions = conditions,
+            **vtable
+        )
+
+    def feature_map_add(other):
+        if other:
+            type_other = type(other)
+            if type_other == "list" or type_other == "set":
+                conditions.setdefault(_COMMON_CONDITION, set()).update(other)
+            elif type_other == "dict":
+                for key, value in other.items():
+                    conditions.setdefault(key, set()).update(value)
+            elif hasattr(other, "_type") and other._type == "FeatureMap":
+                for key, value in other.conditions.items():
+                    conditions.setdefault(key, set()).update(value)
+            else:
+                fail("unsupported add operation between FeatureMap and %s" % type_other)
+
+        return make_set()
+
+    def feature_map_flatten():
+        for features in conditions.values():
+            features.update(_flatten_features(_FEATURE_FLAGS.get(package_name, []), features))
+
+        return make_set()
+
+    def feature_map_select():
+        feature_map_flatten()
+        features = []
+        for condition, deps in conditions.items():
+            if condition == _COMMON_CONDITION:
+                features += list(deps)
+            else:
+                features += selects.with_or({
+                    tuple(_CONDITIONS[condition]): list(deps),
+                    "//conditions:default": [],
+                })
+        return features
+
+    def feature_map_get(condition, default = None):
+        return conditions.get(condition, default)
+
+    def feature_map_items():
+        return conditions.items()
+
+    vtable["add"] = feature_map_add
+    vtable["select"] = feature_map_select
+    vtable["flatten"] = feature_map_flatten
+    vtable["get"] = feature_map_get
+    vtable["items"] = feature_map_items
+
+    return make_set()
+
+def crate_features(
+        all = False,
+        additional = None,
+        default = True,
+        package_name = None):
+    """Resolves the features for a crate
+
+    Args:
+        all (bool, optional): If we should include all crate features.
+        additional (list, optional): The desired list of crate targets.
+        default: (bool, optional): Should we include the default resolved features.
+        package_name (str, optional): The package name of the set of dependencies to look up.
+            Defaults to `native.package_name()`.
+
+    Returns:
+        list: a map of features based on some conditions
+    """
+
+    if package_name == None:
+        package_name = native.package_name()
+
+    features = _make_crate_features().add(additional)
+
+    if all:
+        features.add(_FEATURE_FLAGS.get(package_name, {}).keys())
+
+    if default:
+        features.add(_RESOLVED_FEATURE_FLAGS.get(package_name, {}))
+
+    return features
 
 def crate_deps(deps, package_name = None):
     """Finds the fully qualified label of the requested crates for the package where this macro is called.
@@ -103,13 +227,13 @@ def crate_deps(deps, package_name = None):
 
     # Join both sets of dependencies
     dependencies = _flatten_dependency_maps([
-        _NORMAL_DEPENDENCIES,
-        _NORMAL_DEV_DEPENDENCIES,
-        _PROC_MACRO_DEPENDENCIES,
-        _PROC_MACRO_DEV_DEPENDENCIES,
-        _BUILD_DEPENDENCIES,
-        _BUILD_PROC_MACRO_DEPENDENCIES,
-    ]).pop(package_name, {})
+        _NORMAL_DEPENDENCIES.get(package_name, {}),
+        _NORMAL_DEV_DEPENDENCIES.get(package_name, {}),
+        _PROC_MACRO_DEPENDENCIES.get(package_name, {}),
+        _PROC_MACRO_DEV_DEPENDENCIES.get(package_name, {}),
+        _BUILD_DEPENDENCIES.get(package_name, {}),
+        _BUILD_PROC_MACRO_DEPENDENCIES.get(package_name, {}),
+    ], crate_features(package_name = package_name, all = True).flatten())
 
     # Combine all conditional packages so we can easily index over a flat list
     # TODO: Perhaps this should actually return select statements and maintain
@@ -143,6 +267,7 @@ def all_crate_deps(
         proc_macro_dev = False,
         build = False,
         build_proc_macro = False,
+        features = None,
         package_name = None):
     """Finds the fully qualified label of all requested direct crate dependencies \
     for the package where this macro is called.
@@ -163,6 +288,8 @@ def all_crate_deps(
             in the output list.
         build_proc_macro (bool, optional): If True, build proc_macro dependencies are
             included in the output list.
+        features ([str], optional): A list of additional features to include when
+            finding crate dependencies.
         package_name (str, optional): The package name of the set of dependencies to look up.
             Defaults to `native.package_name()` when unset.
 
@@ -173,39 +300,43 @@ def all_crate_deps(
     if package_name == None:
         package_name = native.package_name()
 
-    # Determine the relevant maps to use
-    all_dependency_maps = []
-    if normal:
-        all_dependency_maps.append(_NORMAL_DEPENDENCIES)
-    if normal_dev:
-        all_dependency_maps.append(_NORMAL_DEV_DEPENDENCIES)
-    if proc_macro:
-        all_dependency_maps.append(_PROC_MACRO_DEPENDENCIES)
-    if proc_macro_dev:
-        all_dependency_maps.append(_PROC_MACRO_DEV_DEPENDENCIES)
-    if build:
-        all_dependency_maps.append(_BUILD_DEPENDENCIES)
-    if build_proc_macro:
-        all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES)
+    if features == None:
+        features = crate_features(package_name = package_name)
 
     # Default to always using normal dependencies
+    if not (normal or normal_dev or proc_macro or proc_macro_dev or build or build_proc_macro):
+        normal = True
+
+    # Determine the relevant maps to use
+    all_dependency_maps = []
+    if normal and package_name in _NORMAL_DEPENDENCIES:
+        all_dependency_maps.append(_NORMAL_DEPENDENCIES.get(package_name, {}))
+    if normal_dev and package_name in _NORMAL_DEV_DEPENDENCIES:
+        all_dependency_maps.append(_NORMAL_DEV_DEPENDENCIES.get(package_name, {}))
+    if proc_macro and package_name in _PROC_MACRO_DEPENDENCIES:
+        all_dependency_maps.append(_PROC_MACRO_DEPENDENCIES.get(package_name, {}))
+    if proc_macro_dev and package_name in _PROC_MACRO_DEV_DEPENDENCIES:
+        all_dependency_maps.append(_PROC_MACRO_DEV_DEPENDENCIES.get(package_name, {}))
+    if build and package_name in _BUILD_DEPENDENCIES:
+        all_dependency_maps.append(_BUILD_DEPENDENCIES.get(package_name, {}))
+    if build_proc_macro and package_name in _BUILD_PROC_MACRO_DEPENDENCIES:
+        all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES.get(package_name, {}))
+
     if not all_dependency_maps:
-        all_dependency_maps.append(_NORMAL_DEPENDENCIES)
+        print("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
 
-    dependencies = _flatten_dependency_maps(all_dependency_maps).pop(package_name, None)
-
-    if not dependencies:
-        if dependencies == None:
-            fail("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
-        else:
-            return []
+    features = _make_crate_features(package_name = package_name).add(features).flatten()
+    dependencies = _flatten_dependency_maps(all_dependency_maps, features)
 
     crate_deps = list(dependencies.pop(_COMMON_CONDITION, {}).values())
-    for condition, deps in dependencies.items():
-        crate_deps += selects.with_or({
-            tuple(_CONDITIONS[condition]): deps.values(),
+    if dependencies:
+        select_statement = {
             "//conditions:default": [],
-        })
+        }
+        for condition, deps in dependencies.items():
+            select_statement[condition] = deps.values()
+
+        crate_deps += select(select_statement)
 
     return crate_deps
 
@@ -216,6 +347,7 @@ def aliases(
         proc_macro_dev = False,
         build = False,
         build_proc_macro = False,
+        features = None,
         package_name = None):
     """Produces a map of Crate alias names to their original label
 
@@ -235,6 +367,8 @@ def aliases(
             in the output list.
         build_proc_macro (bool, optional): If True, build proc_macro dependencies are
             included in the output list.
+        features ([str], optional): A list of additional features to include when
+            finding crate dependencies.
         package_name (str, optional): The package name of the set of dependencies to look up.
             Defaults to `native.package_name()` when unset.
 
@@ -244,47 +378,44 @@ def aliases(
     if package_name == None:
         package_name = native.package_name()
 
+    if features == None:
+        features = crate_features(package_name = package_name)
+
+    if not (normal or normal_dev or proc_macro or proc_macro_dev or build or build_proc_macro):
+        normal = True
+        proc_macro = True
+
     # Determine the relevant maps to use
     all_aliases_maps = []
-    if normal:
-        all_aliases_maps.append(_NORMAL_ALIASES)
-    if normal_dev:
-        all_aliases_maps.append(_NORMAL_DEV_ALIASES)
-    if proc_macro:
-        all_aliases_maps.append(_PROC_MACRO_ALIASES)
-    if proc_macro_dev:
-        all_aliases_maps.append(_PROC_MACRO_DEV_ALIASES)
-    if build:
-        all_aliases_maps.append(_BUILD_ALIASES)
-    if build_proc_macro:
-        all_aliases_maps.append(_BUILD_PROC_MACRO_ALIASES)
+    if normal and package_name in _NORMAL_ALIASES:
+        all_aliases_maps.append(_NORMAL_ALIASES.get(package_name, {}))
+    if normal_dev and package_name in _NORMAL_DEV_ALIASES:
+        all_aliases_maps.append(_NORMAL_DEV_ALIASES.get(package_name, {}))
+    if proc_macro and package_name in _PROC_MACRO_ALIASES:
+        all_aliases_maps.append(_PROC_MACRO_ALIASES.get(package_name, {}))
+    if proc_macro_dev and package_name in _PROC_MACRO_DEV_ALIASES:
+        all_aliases_maps.append(_PROC_MACRO_DEV_ALIASES.get(package_name, {}))
+    if build and package_name in _BUILD_ALIASES:
+        all_aliases_maps.append(_BUILD_ALIASES.get(package_name, {}))
+    if build_proc_macro and package_name in _BUILD_PROC_MACRO_ALIASES:
+        all_aliases_maps.append(_BUILD_PROC_MACRO_ALIASES.get(package_name, {}))
 
-    # Default to always using normal aliases
     if not all_aliases_maps:
-        all_aliases_maps.append(_NORMAL_ALIASES)
-        all_aliases_maps.append(_PROC_MACRO_ALIASES)
-
-    aliases = _flatten_dependency_maps(all_aliases_maps).pop(package_name, None)
-
-    if not aliases:
         return dict()
 
+    features = _make_crate_features(package_name = package_name).add(features).flatten()
+    aliases = _flatten_dependency_maps(all_aliases_maps, features)
     common_items = aliases.pop(_COMMON_CONDITION, {}).items()
 
     # If there are only common items in the dictionary, immediately return them
-    if not len(aliases.keys()) == 1:
+    if not aliases:
         return dict(common_items)
 
     # Build a single select statement where each conditional has accounted for the
     # common set of aliases.
     crate_aliases = {"//conditions:default": dict(common_items)}
     for condition, deps in aliases.items():
-        condition_triples = _CONDITIONS[condition]
-        for triple in condition_triples:
-            if triple in crate_aliases:
-                crate_aliases[triple].update(deps)
-            else:
-                crate_aliases.update({triple: dict(deps.items() + common_items)})
+        crate_aliases[condition] = dict(deps.items() + common_items)
 
     return select(crate_aliases)
 
@@ -294,31 +425,47 @@ def aliases(
 
 _NORMAL_DEPENDENCIES = {
     "": {
-        _COMMON_CONDITION: {
-            "clap": Label("@crates_vendor//:clap-3.1.5"),
-            "rand": Label("@crates_vendor//:rand-0.8.5"),
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+                "rand": Label("@crates_vendor//:rand-0.8.5"),
+            },
+        },
+        "clap": {
+            _COMMON_CONDITION: {
+                "clap": Label("@crates_vendor//:clap-3.1.5"),
+            },
         },
     },
 }
 
 _NORMAL_ALIASES = {
     "": {
-        _COMMON_CONDITION: {
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+            },
+        },
+        "clap": {
+            _COMMON_CONDITION: {
+            },
         },
     },
 }
 
 _NORMAL_DEV_DEPENDENCIES = {
     "": {
-        _COMMON_CONDITION: {
-            "version-sync": Label("@crates_vendor//:version-sync-0.9.4"),
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+                "version-sync": Label("@crates_vendor//:version-sync-0.9.4"),
+            },
         },
     },
 }
 
 _NORMAL_DEV_ALIASES = {
     "": {
-        _COMMON_CONDITION: {
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+            },
         },
     },
 }
@@ -340,7 +487,9 @@ _PROC_MACRO_DEV_DEPENDENCIES = {
 
 _PROC_MACRO_DEV_ALIASES = {
     "": {
-        _COMMON_CONDITION: {
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+            },
         },
     },
 }
@@ -365,6 +514,24 @@ _BUILD_PROC_MACRO_ALIASES = {
     },
 }
 
+_FEATURE_FLAGS = {
+    "": {
+        "application": [
+            "clap",
+        ],
+        "clap": [
+        ],
+        "default": [
+            "application",
+        ],
+    },
+}
+
+_RESOLVED_FEATURE_FLAGS = {
+    "": {
+    },
+}
+
 _CONDITIONS = {
     "aarch64-apple-darwin": ["@rules_rust//rust/platform:aarch64-apple-darwin"],
     "aarch64-apple-ios": ["@rules_rust//rust/platform:aarch64-apple-ios"],
@@ -379,13 +546,11 @@ _CONDITIONS = {
     "arm-unknown-linux-gnueabi": ["@rules_rust//rust/platform:arm-unknown-linux-gnueabi"],
     "armv7-linux-androideabi": ["@rules_rust//rust/platform:armv7-linux-androideabi"],
     "armv7-unknown-linux-gnueabi": ["@rules_rust//rust/platform:armv7-unknown-linux-gnueabi"],
-    "cfg(target_os = \"hermit\")": [],
     "cfg(target_os = \"wasi\")": ["@rules_rust//rust/platform:wasm32-wasip1"],
     "cfg(unix)": ["@rules_rust//rust/platform:aarch64-apple-darwin", "@rules_rust//rust/platform:aarch64-apple-ios", "@rules_rust//rust/platform:aarch64-apple-ios-sim", "@rules_rust//rust/platform:aarch64-linux-android", "@rules_rust//rust/platform:aarch64-unknown-fuchsia", "@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu", "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710", "@rules_rust//rust/platform:arm-unknown-linux-gnueabi", "@rules_rust//rust/platform:armv7-linux-androideabi", "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi", "@rules_rust//rust/platform:i686-apple-darwin", "@rules_rust//rust/platform:i686-linux-android", "@rules_rust//rust/platform:i686-unknown-freebsd", "@rules_rust//rust/platform:i686-unknown-linux-gnu", "@rules_rust//rust/platform:powerpc-unknown-linux-gnu", "@rules_rust//rust/platform:s390x-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-apple-darwin", "@rules_rust//rust/platform:x86_64-apple-ios", "@rules_rust//rust/platform:x86_64-linux-android", "@rules_rust//rust/platform:x86_64-unknown-freebsd", "@rules_rust//rust/platform:x86_64-unknown-fuchsia", "@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu"],
     "cfg(windows)": ["@rules_rust//rust/platform:aarch64-pc-windows-msvc", "@rules_rust//rust/platform:i686-pc-windows-msvc", "@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
     "i686-apple-darwin": ["@rules_rust//rust/platform:i686-apple-darwin"],
     "i686-linux-android": ["@rules_rust//rust/platform:i686-linux-android"],
-    "i686-pc-windows-gnu": [],
     "i686-pc-windows-msvc": ["@rules_rust//rust/platform:i686-pc-windows-msvc"],
     "i686-unknown-freebsd": ["@rules_rust//rust/platform:i686-unknown-freebsd"],
     "i686-unknown-linux-gnu": ["@rules_rust//rust/platform:i686-unknown-linux-gnu"],
@@ -400,7 +565,6 @@ _CONDITIONS = {
     "x86_64-apple-darwin": ["@rules_rust//rust/platform:x86_64-apple-darwin"],
     "x86_64-apple-ios": ["@rules_rust//rust/platform:x86_64-apple-ios"],
     "x86_64-linux-android": ["@rules_rust//rust/platform:x86_64-linux-android"],
-    "x86_64-pc-windows-gnu": [],
     "x86_64-pc-windows-msvc": ["@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
     "x86_64-unknown-freebsd": ["@rules_rust//rust/platform:x86_64-unknown-freebsd"],
     "x86_64-unknown-fuchsia": ["@rules_rust//rust/platform:x86_64-unknown-fuchsia"],
@@ -516,16 +680,6 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/heck/0.4.0/download"],
         strip_prefix = "heck-0.4.0",
         build_file = Label("//vendor_external/crates:BUILD.heck-0.4.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor__hermit-abi-0.1.19",
-        sha256 = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/hermit-abi/0.1.19/download"],
-        strip_prefix = "hermit-abi-0.1.19",
-        build_file = Label("//vendor_external/crates:BUILD.hermit-abi-0.1.19.bazel"),
     )
 
     maybe(
@@ -900,32 +1054,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor__winapi-i686-pc-windows-gnu-0.4.0",
-        sha256 = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0/download"],
-        strip_prefix = "winapi-i686-pc-windows-gnu-0.4.0",
-        build_file = Label("//vendor_external/crates:BUILD.winapi-i686-pc-windows-gnu-0.4.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor__winapi-util-0.1.5",
         sha256 = "70ec6ce85bb158151cae5e5c87f95a8e97d2c0c4b001223f33a334e3ce5de178",
         type = "tar.gz",
         urls = ["https://static.crates.io/crates/winapi-util/0.1.5/download"],
         strip_prefix = "winapi-util-0.1.5",
         build_file = Label("//vendor_external/crates:BUILD.winapi-util-0.1.5.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor__winapi-x86_64-pc-windows-gnu-0.4.0",
-        sha256 = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/winapi-x86_64-pc-windows-gnu/0.4.0/download"],
-        strip_prefix = "winapi-x86_64-pc-windows-gnu-0.4.0",
-        build_file = Label("//vendor_external/crates:BUILD.winapi-x86_64-pc-windows-gnu-0.4.0.bazel"),
     )
 
     return [

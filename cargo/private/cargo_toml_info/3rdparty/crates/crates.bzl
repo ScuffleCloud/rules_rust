@@ -25,6 +25,7 @@ def crate_repositories():
         name = "rrcti",
         build_file = Label("//cargo/private/cargo_toml_info/3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//cargo/private/cargo_toml_info/3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//cargo/private/cargo_toml_info/3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "rrcti", is_dev_dep = False)]
