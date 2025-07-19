@@ -139,13 +139,13 @@ alias(
 )
 
 alias(
-    name = "tracing-subscriber-0.3.19",
-    actual = "//vendor_local_pkgs/crates/tracing-subscriber-0.3.19:tracing_subscriber",
+    name = "tracing-subscriber-0.3.20",
+    actual = "//vendor_local_pkgs/crates/tracing-subscriber-0.3.20:tracing_subscriber",
     tags = ["manual"],
 )
 
 alias(
     name = "tracing-subscriber",
-    actual = "//vendor_local_pkgs/crates/tracing-subscriber-0.3.19:tracing_subscriber",
+    actual = "//vendor_local_pkgs/crates/tracing-subscriber-0.3.20:tracing_subscriber",
     tags = ["manual"],
 )

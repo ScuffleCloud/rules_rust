@@ -1,5 +1,5 @@
 {
-  "checksum": "0b4aff37513ecec37539b62baf8d96b06203718179a8797b70bff3486c703f79",
+  "checksum": "e063186449427166f231503fe438c07349a5b10f50edf8b663806535f1faa5f2",
   "crates": {
     "direct-cargo-bazel-deps 0.0.1": {
       "name": "direct-cargo-bazel-deps",
@@ -22,24 +22,92 @@
       ],
       "library_target_name": "direct_cargo_bazel_deps",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
         "deps": {
-          "common": [
-            {
-              "id": "test_data_passing_crate 0.1.0",
-              "target": "test_data_passing_crate"
-            }
-          ],
-          "selects": {}
+          "common": [],
+          "selects": {
+            "aarch64-apple-darwin": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "aarch64-unknown-linux-gnu": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "wasm32-unknown-unknown": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "wasm32-wasip1": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "x86_64-pc-windows-msvc": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "x86_64-unknown-linux-gnu": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "x86_64-unknown-nixos-gnu": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ]
+          }
         },
         "edition": "2018",
         "version": "0.0.1"
       },
       "license": null,
       "license_ids": [],
-      "license_file": null
+      "license_file": null,
+      "feature_dep_maps": {
+        "deps": {
+          "required": {
+            "common": [
+              {
+                "id": "test_data_passing_crate 0.1.0",
+                "target": "test_data_passing_crate",
+                "alias": "test_data_passing_crate"
+              }
+            ],
+            "selects": {}
+          }
+        }
+      }
     },
     "test_data_passing_crate 0.1.0": {
       "name": "test_data_passing_crate",
@@ -79,6 +147,15 @@
       ],
       "library_target_name": "test_data_passing_crate",
       "common_attrs": {
+        "build_targets": [
+          "aarch64-apple-darwin",
+          "aarch64-unknown-linux-gnu",
+          "wasm32-unknown-unknown",
+          "wasm32-wasip1",
+          "x86_64-pc-windows-msvc",
+          "x86_64-unknown-linux-gnu",
+          "x86_64-unknown-nixos-gnu"
+        ],
         "compile_data_glob": [
           "**"
         ],
@@ -134,7 +211,8 @@
       "x86_64-pc-windows-msvc"
     ],
     "x86_64-unknown-linux-gnu": [
-      "x86_64-unknown-linux-gnu"
+      "x86_64-unknown-linux-gnu",
+      "x86_64-unknown-nixos-gnu"
     ],
     "x86_64-unknown-nixos-gnu": [
       "x86_64-unknown-nixos-gnu"

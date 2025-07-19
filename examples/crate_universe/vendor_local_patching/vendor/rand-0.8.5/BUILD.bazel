@@ -73,19 +73,19 @@ rust_library(
         "//vendor_local_patching/vendor/rand_core-0.6.4:rand_core",
     ] + select({
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # aarch64-unknown-fuchsia
+            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # aarch64-unknown-linux-gnu
+            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # x86_64-apple-darwin
+            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # x86_64-unknown-fuchsia
+            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # x86_64-unknown-linux-gnu
+            "//vendor_local_patching/vendor/libc-0.2.141:libc",  # cfg(unix)
         ],
         "//conditions:default": [],
     }),

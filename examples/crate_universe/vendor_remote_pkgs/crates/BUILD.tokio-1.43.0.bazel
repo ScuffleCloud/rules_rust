@@ -55,18 +55,8 @@ rust_library(
         "sync",
         "time",
         "tokio-macros",
-    ] + select({
-        "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "windows-sys",  # aarch64-pc-windows-msvc
-        ],
-        "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "windows-sys",  # i686-pc-windows-msvc
-        ],
-        "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "windows-sys",  # x86_64-pc-windows-msvc
-        ],
-        "//conditions:default": [],
-    }),
+        "windows-sys",
+    ],
     crate_root = "src/lib.rs",
     edition = "2021",
     proc_macro_deps = [
@@ -106,6 +96,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -135,161 +126,166 @@ rust_library(
         "@crates_vendor_pkgs__pin-project-lite-0.2.16//:pin_project_lite",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-apple-darwin
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-apple-darwin
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-apple-darwin
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-apple-ios
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-apple-ios
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-apple-ios
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-apple-ios-sim
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-apple-ios-sim
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-apple-ios-sim
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-linux-android
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-linux-android
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-linux-android
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-pc-windows-msvc
-            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # aarch64-pc-windows-msvc
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
+            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-unknown-fuchsia
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-unknown-fuchsia
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-unknown-fuchsia
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-unknown-linux-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-unknown-linux-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-unknown-linux-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # aarch64-unknown-nto-qnx710
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # aarch64-unknown-nto-qnx710
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-unknown-nto-qnx710
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-uefi": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # aarch64-unknown-uefi
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # arm-unknown-linux-gnueabi
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # arm-unknown-linux-gnueabi
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # arm-unknown-linux-gnueabi
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # armv7-linux-androideabi
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # armv7-linux-androideabi
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # armv7-linux-androideabi
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # armv7-unknown-linux-gnueabi
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # armv7-unknown-linux-gnueabi
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # armv7-unknown-linux-gnueabi
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # i686-apple-darwin
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # i686-apple-darwin
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # i686-apple-darwin
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # i686-linux-android
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # i686-linux-android
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # i686-linux-android
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # i686-pc-windows-msvc
-            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # i686-pc-windows-msvc
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
+            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # i686-unknown-freebsd
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # i686-unknown-freebsd
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # i686-unknown-freebsd
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # i686-unknown-linux-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # i686-unknown-linux-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # i686-unknown-linux-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # powerpc-unknown-linux-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # powerpc-unknown-linux-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # powerpc-unknown-linux-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # riscv32imc-unknown-none-elf
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
+        ],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # riscv64gc-unknown-none-elf
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # s390x-unknown-linux-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # s390x-unknown-linux-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # s390x-unknown-linux-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # thumbv7em-none-eabi
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # thumbv8m.main-none-eabi
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # wasm32-unknown-emscripten
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # wasm32-unknown-emscripten
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-apple-darwin
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-apple-darwin
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-apple-darwin
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-apple-ios
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-apple-ios
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-apple-ios
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-linux-android
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-linux-android
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-linux-android
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-pc-windows-msvc
-            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # x86_64-pc-windows-msvc
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
+            "@crates_vendor_pkgs__windows-sys-0.52.0//:windows_sys",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-unknown-freebsd
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-unknown-freebsd
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-freebsd
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-unknown-fuchsia
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-unknown-fuchsia
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-fuchsia
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-unknown-linux-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-unknown-linux-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-linux-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
-            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "@crates_vendor_pkgs__libc-0.2.169//:libc",  # cfg(unix)
+            "@crates_vendor_pkgs__signal-hook-registry-1.4.2//:signal_hook_registry",  # cfg(unix)
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-none": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-none
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [
-            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # x86_64-unknown-uefi
+            "@crates_vendor_pkgs__socket2-0.5.8//:socket2",  # cfg(not(target_family = "wasm"))
         ],
         "//conditions:default": [],
     }),

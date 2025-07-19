@@ -76,6 +76,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -105,104 +106,108 @@ rust_library(
         "@rrwbd__time-core-0.1.2//:time_core",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-apple-darwin
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-apple-darwin
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-apple-ios
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-apple-ios
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-apple-ios-sim
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-apple-ios-sim
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-linux-android
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-linux-android
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-unknown-fuchsia
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-unknown-fuchsia
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-unknown-linux-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-unknown-linux-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "@rrwbd__libc-0.2.169//:libc",  # aarch64-unknown-nto-qnx710
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # aarch64-unknown-nto-qnx710
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "@rrwbd__libc-0.2.169//:libc",  # arm-unknown-linux-gnueabi
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # arm-unknown-linux-gnueabi
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "@rrwbd__libc-0.2.169//:libc",  # armv7-linux-androideabi
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # armv7-linux-androideabi
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "@rrwbd__libc-0.2.169//:libc",  # armv7-unknown-linux-gnueabi
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # armv7-unknown-linux-gnueabi
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "@rrwbd__libc-0.2.169//:libc",  # i686-apple-darwin
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # i686-apple-darwin
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "@rrwbd__libc-0.2.169//:libc",  # i686-linux-android
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # i686-linux-android
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "@rrwbd__libc-0.2.169//:libc",  # i686-unknown-freebsd
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # i686-unknown-freebsd
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # i686-unknown-linux-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # i686-unknown-linux-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # powerpc-unknown-linux-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # powerpc-unknown-linux-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
+        ],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # s390x-unknown-linux-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # s390x-unknown-linux-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [
-            "@rrwbd__libc-0.2.169//:libc",  # wasm32-unknown-emscripten
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # wasm32-unknown-emscripten
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-apple-darwin
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-apple-darwin
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-apple-ios
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-apple-ios
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-linux-android
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-linux-android
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-unknown-freebsd
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-unknown-freebsd
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-unknown-fuchsia
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-unknown-fuchsia
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-unknown-linux-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-unknown-linux-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "@rrwbd__libc-0.2.169//:libc",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
-            "@rrwbd__num_threads-0.1.7//:num_threads",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "@rrwbd__libc-0.2.169//:libc",  # cfg(target_family = "unix")
+            "@rrwbd__num_threads-0.1.7//:num_threads",  # cfg(target_family = "unix")
         ],
         "//conditions:default": [],
     }),

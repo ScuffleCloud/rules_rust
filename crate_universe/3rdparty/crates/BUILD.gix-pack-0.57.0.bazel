@@ -76,6 +76,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -113,106 +114,109 @@ rust_library(
         "@cui__uluru-3.0.0//:uluru",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-apple-darwin
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-apple-ios
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-apple-ios-sim
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-linux-android
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-pc-windows-msvc
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-unknown-fuchsia
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-unknown-linux-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-unknown-nto-qnx710
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:aarch64-unknown-uefi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # aarch64-unknown-uefi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # arm-unknown-linux-gnueabi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # armv7-linux-androideabi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # armv7-unknown-linux-gnueabi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # i686-apple-darwin
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # i686-linux-android
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # i686-pc-windows-msvc
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # i686-unknown-freebsd
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # i686-unknown-linux-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # powerpc-unknown-linux-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # riscv32imc-unknown-none-elf
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
+        ],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # riscv64gc-unknown-none-elf
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # s390x-unknown-linux-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # thumbv7em-none-eabi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:thumbv8m.main-none-eabi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # thumbv8m.main-none-eabi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-apple-darwin
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-apple-ios
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-linux-android
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-pc-windows-msvc
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-freebsd
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-fuchsia
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-linux-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-none": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-none
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [
-            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # x86_64-unknown-uefi
+            "@cui__gix-tempfile-16.0.0//:gix_tempfile",  # cfg(not(target_arch = "wasm32"))
         ],
         "//conditions:default": [],
     }),

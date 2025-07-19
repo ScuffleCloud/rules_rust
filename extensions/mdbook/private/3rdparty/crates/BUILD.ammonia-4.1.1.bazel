@@ -70,6 +70,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -97,6 +98,6 @@ rust_library(
         "@rmdbi__html5ever-0.35.0//:html5ever",
         "@rmdbi__maplit-1.0.2//:maplit",
         "@rmdbi__tendril-0.4.3//:tendril",
-        "@rmdbi__url-2.5.6//:url",
+        "@rmdbi__url-2.5.7//:url",
     ],
 )

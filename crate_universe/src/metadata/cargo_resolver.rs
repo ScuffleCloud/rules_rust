@@ -555,6 +555,9 @@ impl<'a> CargoResolver<'a> {
 
             for ((dep_id, _, kind), dep) in &package.deps {
                 let dep_pkg = &self.dependency_resolve[dep_id];
+                if dep_pkg.library_target_name.is_none() {
+                    continue;
+                }
                 for (alias, optional) in &dep.aliases_optional {
                     let dependency = Dependency {
                         features: dep.features.iter().map(|f| f.to_string()).collect(),

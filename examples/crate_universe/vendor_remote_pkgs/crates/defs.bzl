@@ -26,17 +26,48 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 # An identifier that represent common dependencies (unconditional).
 _COMMON_CONDITION = ""
 
-def _flatten_dependency_maps(all_dependency_maps):
+# An identifier that represents a requried feature (unconditional).
+_REQUIRED_FEATURE = ""
+
+def _flatten_features(features, enabled_features):
+    """
+    Flatten features of a crate
+
+    Args:
+        features (dict): A map of feature to list of other features
+        enabled_features (list): A list of enabled features
+
+    Returns:
+        set: A set of all enabled features
+    """
+    resolved = set()
+    queue = list(enabled_features)
+
+    for _ in range(10000):
+        if len(queue) == 0:
+            break
+
+        feat = queue.pop()
+        if feat in resolved:
+            continue
+
+        if feat not in features:
+            fail("{} is not apart of the features for this package".format(feat))
+
+        resolved.add(feat)
+        queue.extend(features[feat])
+
+    return resolved
+
+def _flatten_dependency_maps(all_dependency_maps, enabled_features_map):
     """Flatten a list of dependency maps into one dictionary.
 
     Dependency maps have the following structure:
 
     ```python
     DEPENDENCIES_MAP = {
-        # The first key in the map is a Bazel package
-        # name of the workspace this file is defined in.
-        "workspace_member_package": {
-
+        # The first key in the map is a feature flag
+        "feature": {
             # Not all dependencies are supported for all platforms.
             # the condition key is the condition required to be true
             # on the host platform.
@@ -52,36 +83,129 @@ def _flatten_dependency_maps(all_dependency_maps):
 
     Args:
         all_dependency_maps (list): A list of dicts as described above
+        enabled_features_map (list): A list of enabled features
 
     Returns:
         dict: A dictionary as described above
     """
     dependencies = {}
+    feature_conditions = {
+        _COMMON_CONDITION: set(enabled_features_map.get(_COMMON_CONDITION, set())),
+    }
 
-    for workspace_deps_map in all_dependency_maps:
-        for pkg_name, conditional_deps_map in workspace_deps_map.items():
-            if pkg_name not in dependencies:
-                non_frozen_map = dict()
-                for key, values in conditional_deps_map.items():
-                    non_frozen_map.update({key: dict(values.items())})
-                dependencies.setdefault(pkg_name, non_frozen_map)
-                continue
+    for condition, feature in enabled_features_map.items():
+        for condition in _CONDITIONS.get(condition, []):
+            feature_conditions.setdefault(condition, set()).update(feature)
 
+    for feature_deps_map in all_dependency_maps:
+        for feature, conditional_deps_map in feature_deps_map.items():
             for condition, deps_map in conditional_deps_map.items():
-                # If the condition has not been recorded, do so and continue
-                if condition not in dependencies[pkg_name]:
-                    dependencies[pkg_name].setdefault(condition, dict(deps_map.items()))
-                    continue
+                condition_flags = _CONDITIONS[condition] if condition != _COMMON_CONDITION else feature_conditions.keys()
+                for condition in condition_flags:
+                    if feature == _REQUIRED_FEATURE or feature in feature_conditions.get(_COMMON_CONDITION, set()) or feature in feature_conditions.get(condition, set()):
+                        dependencies.setdefault(condition, dict()).update(deps_map)
 
-                # Alert on any miss-matched dependencies
-                inconsistent_entries = []
-                for crate_name, crate_label in deps_map.items():
-                    existing = dependencies[pkg_name][condition].get(crate_name)
-                    if existing and existing != crate_label:
-                        inconsistent_entries.append((crate_name, existing, crate_label))
-                    dependencies[pkg_name][condition].update({crate_name: crate_label})
+    if _COMMON_CONDITION in dependencies:
+        for cond, v in dependencies.items():
+            if cond != _COMMON_CONDITION:
+                for k in dependencies[_COMMON_CONDITION]:
+                    v.pop(k, default = None)
 
     return dependencies
+
+def _make_crate_features(package_name = None):
+    if package_name == None:
+        package_name = native.package_name()
+
+    conditions = {}
+    vtable = {}
+
+    def make_set():
+        return struct(
+            _type = "FeatureMap",
+            conditions = conditions,
+            **vtable
+        )
+
+    def feature_map_add(other):
+        if other:
+            type_other = type(other)
+            if type_other == "list" or type_other == "set":
+                conditions.setdefault(_COMMON_CONDITION, set()).update(other)
+            elif type_other == "dict":
+                for key, value in other.items():
+                    conditions.setdefault(key, set()).update(value)
+            elif hasattr(other, "_type") and other._type == "FeatureMap":
+                for key, value in other.conditions.items():
+                    conditions.setdefault(key, set()).update(value)
+            else:
+                fail("unsupported add operation between FeatureMap and %s" % type_other)
+
+        return make_set()
+
+    def feature_map_flatten():
+        for features in conditions.values():
+            features.update(_flatten_features(_FEATURE_FLAGS.get(package_name, []), features))
+
+        return make_set()
+
+    def feature_map_select():
+        feature_map_flatten()
+        features = []
+        for condition, deps in conditions.items():
+            if condition == _COMMON_CONDITION:
+                features += list(deps)
+            else:
+                features += selects.with_or({
+                    tuple(_CONDITIONS[condition]): list(deps),
+                    "//conditions:default": [],
+                })
+        return features
+
+    def feature_map_get(condition, default = None):
+        return conditions.get(condition, default)
+
+    def feature_map_items():
+        return conditions.items()
+
+    vtable["add"] = feature_map_add
+    vtable["select"] = feature_map_select
+    vtable["flatten"] = feature_map_flatten
+    vtable["get"] = feature_map_get
+    vtable["items"] = feature_map_items
+
+    return make_set()
+
+def crate_features(
+        all = False,
+        additional = None,
+        default = True,
+        package_name = None):
+    """Resolves the features for a crate
+
+    Args:
+        all (bool, optional): If we should include all crate features.
+        additional (list, optional): The desired list of crate targets.
+        default: (bool, optional): Should we include the default resolved features.
+        package_name (str, optional): The package name of the set of dependencies to look up.
+            Defaults to `native.package_name()`.
+
+    Returns:
+        list: a map of features based on some conditions
+    """
+
+    if package_name == None:
+        package_name = native.package_name()
+
+    features = _make_crate_features().add(additional)
+
+    if all:
+        features.add(_FEATURE_FLAGS.get(package_name, {}).keys())
+
+    if default:
+        features.add(_RESOLVED_FEATURE_FLAGS.get(package_name, {}))
+
+    return features
 
 def crate_deps(deps, package_name = None):
     """Finds the fully qualified label of the requested crates for the package where this macro is called.
@@ -103,13 +227,13 @@ def crate_deps(deps, package_name = None):
 
     # Join both sets of dependencies
     dependencies = _flatten_dependency_maps([
-        _NORMAL_DEPENDENCIES,
-        _NORMAL_DEV_DEPENDENCIES,
-        _PROC_MACRO_DEPENDENCIES,
-        _PROC_MACRO_DEV_DEPENDENCIES,
-        _BUILD_DEPENDENCIES,
-        _BUILD_PROC_MACRO_DEPENDENCIES,
-    ]).pop(package_name, {})
+        _NORMAL_DEPENDENCIES.get(package_name, {}),
+        _NORMAL_DEV_DEPENDENCIES.get(package_name, {}),
+        _PROC_MACRO_DEPENDENCIES.get(package_name, {}),
+        _PROC_MACRO_DEV_DEPENDENCIES.get(package_name, {}),
+        _BUILD_DEPENDENCIES.get(package_name, {}),
+        _BUILD_PROC_MACRO_DEPENDENCIES.get(package_name, {}),
+    ], crate_features(package_name = package_name, all = True).flatten())
 
     # Combine all conditional packages so we can easily index over a flat list
     # TODO: Perhaps this should actually return select statements and maintain
@@ -143,6 +267,7 @@ def all_crate_deps(
         proc_macro_dev = False,
         build = False,
         build_proc_macro = False,
+        features = None,
         package_name = None):
     """Finds the fully qualified label of all requested direct crate dependencies \
     for the package where this macro is called.
@@ -163,6 +288,8 @@ def all_crate_deps(
             in the output list.
         build_proc_macro (bool, optional): If True, build proc_macro dependencies are
             included in the output list.
+        features ([str], optional): A list of additional features to include when
+            finding crate dependencies.
         package_name (str, optional): The package name of the set of dependencies to look up.
             Defaults to `native.package_name()` when unset.
 
@@ -173,39 +300,43 @@ def all_crate_deps(
     if package_name == None:
         package_name = native.package_name()
 
-    # Determine the relevant maps to use
-    all_dependency_maps = []
-    if normal:
-        all_dependency_maps.append(_NORMAL_DEPENDENCIES)
-    if normal_dev:
-        all_dependency_maps.append(_NORMAL_DEV_DEPENDENCIES)
-    if proc_macro:
-        all_dependency_maps.append(_PROC_MACRO_DEPENDENCIES)
-    if proc_macro_dev:
-        all_dependency_maps.append(_PROC_MACRO_DEV_DEPENDENCIES)
-    if build:
-        all_dependency_maps.append(_BUILD_DEPENDENCIES)
-    if build_proc_macro:
-        all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES)
+    if features == None:
+        features = crate_features(package_name = package_name)
 
     # Default to always using normal dependencies
+    if not (normal or normal_dev or proc_macro or proc_macro_dev or build or build_proc_macro):
+        normal = True
+
+    # Determine the relevant maps to use
+    all_dependency_maps = []
+    if normal and package_name in _NORMAL_DEPENDENCIES:
+        all_dependency_maps.append(_NORMAL_DEPENDENCIES.get(package_name, {}))
+    if normal_dev and package_name in _NORMAL_DEV_DEPENDENCIES:
+        all_dependency_maps.append(_NORMAL_DEV_DEPENDENCIES.get(package_name, {}))
+    if proc_macro and package_name in _PROC_MACRO_DEPENDENCIES:
+        all_dependency_maps.append(_PROC_MACRO_DEPENDENCIES.get(package_name, {}))
+    if proc_macro_dev and package_name in _PROC_MACRO_DEV_DEPENDENCIES:
+        all_dependency_maps.append(_PROC_MACRO_DEV_DEPENDENCIES.get(package_name, {}))
+    if build and package_name in _BUILD_DEPENDENCIES:
+        all_dependency_maps.append(_BUILD_DEPENDENCIES.get(package_name, {}))
+    if build_proc_macro and package_name in _BUILD_PROC_MACRO_DEPENDENCIES:
+        all_dependency_maps.append(_BUILD_PROC_MACRO_DEPENDENCIES.get(package_name, {}))
+
     if not all_dependency_maps:
-        all_dependency_maps.append(_NORMAL_DEPENDENCIES)
+        print("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
 
-    dependencies = _flatten_dependency_maps(all_dependency_maps).pop(package_name, None)
-
-    if not dependencies:
-        if dependencies == None:
-            fail("Tried to get all_crate_deps for package " + package_name + " but that package had no Cargo.toml file")
-        else:
-            return []
+    features = _make_crate_features(package_name = package_name).add(features).flatten()
+    dependencies = _flatten_dependency_maps(all_dependency_maps, features)
 
     crate_deps = list(dependencies.pop(_COMMON_CONDITION, {}).values())
-    for condition, deps in dependencies.items():
-        crate_deps += selects.with_or({
-            tuple(_CONDITIONS[condition]): deps.values(),
+    if dependencies:
+        select_statement = {
             "//conditions:default": [],
-        })
+        }
+        for condition, deps in dependencies.items():
+            select_statement[condition] = deps.values()
+
+        crate_deps += select(select_statement)
 
     return crate_deps
 
@@ -216,6 +347,7 @@ def aliases(
         proc_macro_dev = False,
         build = False,
         build_proc_macro = False,
+        features = None,
         package_name = None):
     """Produces a map of Crate alias names to their original label
 
@@ -235,6 +367,8 @@ def aliases(
             in the output list.
         build_proc_macro (bool, optional): If True, build proc_macro dependencies are
             included in the output list.
+        features ([str], optional): A list of additional features to include when
+            finding crate dependencies.
         package_name (str, optional): The package name of the set of dependencies to look up.
             Defaults to `native.package_name()` when unset.
 
@@ -244,47 +378,44 @@ def aliases(
     if package_name == None:
         package_name = native.package_name()
 
+    if features == None:
+        features = crate_features(package_name = package_name)
+
+    if not (normal or normal_dev or proc_macro or proc_macro_dev or build or build_proc_macro):
+        normal = True
+        proc_macro = True
+
     # Determine the relevant maps to use
     all_aliases_maps = []
-    if normal:
-        all_aliases_maps.append(_NORMAL_ALIASES)
-    if normal_dev:
-        all_aliases_maps.append(_NORMAL_DEV_ALIASES)
-    if proc_macro:
-        all_aliases_maps.append(_PROC_MACRO_ALIASES)
-    if proc_macro_dev:
-        all_aliases_maps.append(_PROC_MACRO_DEV_ALIASES)
-    if build:
-        all_aliases_maps.append(_BUILD_ALIASES)
-    if build_proc_macro:
-        all_aliases_maps.append(_BUILD_PROC_MACRO_ALIASES)
+    if normal and package_name in _NORMAL_ALIASES:
+        all_aliases_maps.append(_NORMAL_ALIASES.get(package_name, {}))
+    if normal_dev and package_name in _NORMAL_DEV_ALIASES:
+        all_aliases_maps.append(_NORMAL_DEV_ALIASES.get(package_name, {}))
+    if proc_macro and package_name in _PROC_MACRO_ALIASES:
+        all_aliases_maps.append(_PROC_MACRO_ALIASES.get(package_name, {}))
+    if proc_macro_dev and package_name in _PROC_MACRO_DEV_ALIASES:
+        all_aliases_maps.append(_PROC_MACRO_DEV_ALIASES.get(package_name, {}))
+    if build and package_name in _BUILD_ALIASES:
+        all_aliases_maps.append(_BUILD_ALIASES.get(package_name, {}))
+    if build_proc_macro and package_name in _BUILD_PROC_MACRO_ALIASES:
+        all_aliases_maps.append(_BUILD_PROC_MACRO_ALIASES.get(package_name, {}))
 
-    # Default to always using normal aliases
     if not all_aliases_maps:
-        all_aliases_maps.append(_NORMAL_ALIASES)
-        all_aliases_maps.append(_PROC_MACRO_ALIASES)
-
-    aliases = _flatten_dependency_maps(all_aliases_maps).pop(package_name, None)
-
-    if not aliases:
         return dict()
 
+    features = _make_crate_features(package_name = package_name).add(features).flatten()
+    aliases = _flatten_dependency_maps(all_aliases_maps, features)
     common_items = aliases.pop(_COMMON_CONDITION, {}).items()
 
     # If there are only common items in the dictionary, immediately return them
-    if not len(aliases.keys()) == 1:
+    if not aliases:
         return dict(common_items)
 
     # Build a single select statement where each conditional has accounted for the
     # common set of aliases.
     crate_aliases = {"//conditions:default": dict(common_items)}
     for condition, deps in aliases.items():
-        condition_triples = _CONDITIONS[condition]
-        for triple in condition_triples:
-            if triple in crate_aliases:
-                crate_aliases[triple].update(deps)
-            else:
-                crate_aliases.update({triple: dict(deps.items() + common_items)})
+        crate_aliases[condition] = dict(deps.items() + common_items)
 
     return select(crate_aliases)
 
@@ -294,24 +425,28 @@ def aliases(
 
 _NORMAL_DEPENDENCIES = {
     "": {
-        _COMMON_CONDITION: {
-            "axum": Label("@crates_vendor_pkgs//:axum-0.4.8"),
-            "hyper": Label("@crates_vendor_pkgs//:hyper-0.14.32"),
-            "mime": Label("@crates_vendor_pkgs//:mime-0.3.17"),
-            "serde_json": Label("@crates_vendor_pkgs//:serde_json-1.0.135"),
-            "socket2": Label("@crates_vendor_pkgs//:socket2-0.4.10"),
-            "tokio": Label("@crates_vendor_pkgs//:tokio-1.43.0"),
-            "tower": Label("@crates_vendor_pkgs//:tower-0.4.13"),
-            "tower-http": Label("@crates_vendor_pkgs//:tower-http-0.2.5"),
-            "tracing": Label("@crates_vendor_pkgs//:tracing-0.1.41"),
-            "tracing-subscriber": Label("@crates_vendor_pkgs//:tracing-subscriber-0.3.19"),
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+                "axum": Label("@crates_vendor_pkgs//:axum-0.4.8"),
+                "hyper": Label("@crates_vendor_pkgs//:hyper-0.14.32"),
+                "mime": Label("@crates_vendor_pkgs//:mime-0.3.17"),
+                "serde_json": Label("@crates_vendor_pkgs//:serde_json-1.0.135"),
+                "socket2": Label("@crates_vendor_pkgs//:socket2-0.4.10"),
+                "tokio": Label("@crates_vendor_pkgs//:tokio-1.43.0"),
+                "tower": Label("@crates_vendor_pkgs//:tower-0.4.13"),
+                "tower-http": Label("@crates_vendor_pkgs//:tower-http-0.2.5"),
+                "tracing": Label("@crates_vendor_pkgs//:tracing-0.1.41"),
+                "tracing-subscriber": Label("@crates_vendor_pkgs//:tracing-subscriber-0.3.19"),
+            },
         },
     },
 }
 
 _NORMAL_ALIASES = {
     "": {
-        _COMMON_CONDITION: {
+        _REQUIRED_FEATURE: {
+            _COMMON_CONDITION: {
+            },
         },
     },
 }
@@ -366,12 +501,21 @@ _BUILD_PROC_MACRO_ALIASES = {
     },
 }
 
+_FEATURE_FLAGS = {
+    "": {
+    },
+}
+
+_RESOLVED_FEATURE_FLAGS = {
+    "": {
+    },
+}
+
 _CONDITIONS = {
     "aarch64-apple-darwin": ["@rules_rust//rust/platform:aarch64-apple-darwin"],
     "aarch64-apple-ios": ["@rules_rust//rust/platform:aarch64-apple-ios"],
     "aarch64-apple-ios-sim": ["@rules_rust//rust/platform:aarch64-apple-ios-sim"],
     "aarch64-linux-android": ["@rules_rust//rust/platform:aarch64-linux-android"],
-    "aarch64-pc-windows-gnullvm": [],
     "aarch64-pc-windows-msvc": ["@rules_rust//rust/platform:aarch64-pc-windows-msvc"],
     "aarch64-unknown-fuchsia": ["@rules_rust//rust/platform:aarch64-unknown-fuchsia"],
     "aarch64-unknown-linux-gnu": ["@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu"],
@@ -383,27 +527,20 @@ _CONDITIONS = {
     "armv7-unknown-linux-gnueabi": ["@rules_rust//rust/platform:armv7-unknown-linux-gnueabi"],
     "cfg(all(any(target_arch = \"x86_64\", target_arch = \"arm64ec\"), target_env = \"msvc\", not(windows_raw_dylib)))": ["@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
     "cfg(all(target_arch = \"aarch64\", target_env = \"msvc\", not(windows_raw_dylib)))": ["@rules_rust//rust/platform:aarch64-pc-windows-msvc"],
-    "cfg(all(target_arch = \"x86\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": ["@rules_rust//rust/platform:i686-unknown-linux-gnu"],
     "cfg(all(target_arch = \"x86\", target_env = \"msvc\", not(windows_raw_dylib)))": ["@rules_rust//rust/platform:i686-pc-windows-msvc"],
-    "cfg(all(target_arch = \"x86_64\", target_env = \"gnu\", not(target_abi = \"llvm\"), not(windows_raw_dylib)))": ["@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu"],
-    "cfg(any())": [],
-    "cfg(not(all(windows, target_env = \"msvc\", not(target_vendor = \"uwp\"))))": ["@rules_rust//rust/platform:aarch64-apple-darwin", "@rules_rust//rust/platform:aarch64-apple-ios", "@rules_rust//rust/platform:aarch64-apple-ios-sim", "@rules_rust//rust/platform:aarch64-linux-android", "@rules_rust//rust/platform:aarch64-unknown-fuchsia", "@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu", "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710", "@rules_rust//rust/platform:aarch64-unknown-uefi", "@rules_rust//rust/platform:arm-unknown-linux-gnueabi", "@rules_rust//rust/platform:armv7-linux-androideabi", "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi", "@rules_rust//rust/platform:i686-apple-darwin", "@rules_rust//rust/platform:i686-linux-android", "@rules_rust//rust/platform:i686-unknown-freebsd", "@rules_rust//rust/platform:i686-unknown-linux-gnu", "@rules_rust//rust/platform:powerpc-unknown-linux-gnu", "@rules_rust//rust/platform:riscv32imc-unknown-none-elf", "@rules_rust//rust/platform:riscv64gc-unknown-none-elf", "@rules_rust//rust/platform:s390x-unknown-linux-gnu", "@rules_rust//rust/platform:thumbv7em-none-eabi", "@rules_rust//rust/platform:thumbv8m.main-none-eabi", "@rules_rust//rust/platform:wasm32-unknown-emscripten", "@rules_rust//rust/platform:wasm32-unknown-unknown", "@rules_rust//rust/platform:wasm32-wasip1", "@rules_rust//rust/platform:wasm32-wasip1-threads", "@rules_rust//rust/platform:wasm32-wasip2", "@rules_rust//rust/platform:x86_64-apple-darwin", "@rules_rust//rust/platform:x86_64-apple-ios", "@rules_rust//rust/platform:x86_64-linux-android", "@rules_rust//rust/platform:x86_64-unknown-freebsd", "@rules_rust//rust/platform:x86_64-unknown-fuchsia", "@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu", "@rules_rust//rust/platform:x86_64-unknown-none", "@rules_rust//rust/platform:x86_64-unknown-uefi"],
-    "cfg(target_os = \"hermit\")": [],
-    "cfg(target_os = \"redox\")": [],
+    "cfg(not(target_family = \"wasm\"))": ["@rules_rust//rust/platform:aarch64-apple-darwin", "@rules_rust//rust/platform:aarch64-apple-ios", "@rules_rust//rust/platform:aarch64-apple-ios-sim", "@rules_rust//rust/platform:aarch64-linux-android", "@rules_rust//rust/platform:aarch64-pc-windows-msvc", "@rules_rust//rust/platform:aarch64-unknown-fuchsia", "@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu", "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710", "@rules_rust//rust/platform:aarch64-unknown-uefi", "@rules_rust//rust/platform:arm-unknown-linux-gnueabi", "@rules_rust//rust/platform:armv7-linux-androideabi", "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi", "@rules_rust//rust/platform:i686-apple-darwin", "@rules_rust//rust/platform:i686-linux-android", "@rules_rust//rust/platform:i686-pc-windows-msvc", "@rules_rust//rust/platform:i686-unknown-freebsd", "@rules_rust//rust/platform:i686-unknown-linux-gnu", "@rules_rust//rust/platform:powerpc-unknown-linux-gnu", "@rules_rust//rust/platform:riscv32imc-unknown-none-elf", "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu", "@rules_rust//rust/platform:riscv64gc-unknown-none-elf", "@rules_rust//rust/platform:s390x-unknown-linux-gnu", "@rules_rust//rust/platform:thumbv7em-none-eabi", "@rules_rust//rust/platform:thumbv8m.main-none-eabi", "@rules_rust//rust/platform:x86_64-apple-darwin", "@rules_rust//rust/platform:x86_64-apple-ios", "@rules_rust//rust/platform:x86_64-linux-android", "@rules_rust//rust/platform:x86_64-pc-windows-msvc", "@rules_rust//rust/platform:x86_64-unknown-freebsd", "@rules_rust//rust/platform:x86_64-unknown-fuchsia", "@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu", "@rules_rust//rust/platform:x86_64-unknown-none", "@rules_rust//rust/platform:x86_64-unknown-uefi"],
     "cfg(target_os = \"wasi\")": ["@rules_rust//rust/platform:wasm32-wasip1", "@rules_rust//rust/platform:wasm32-wasip1-threads", "@rules_rust//rust/platform:wasm32-wasip2"],
     "cfg(target_os = \"windows\")": ["@rules_rust//rust/platform:aarch64-pc-windows-msvc", "@rules_rust//rust/platform:i686-pc-windows-msvc", "@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
-    "cfg(tokio_taskdump)": [],
-    "cfg(unix)": ["@rules_rust//rust/platform:aarch64-apple-darwin", "@rules_rust//rust/platform:aarch64-apple-ios", "@rules_rust//rust/platform:aarch64-apple-ios-sim", "@rules_rust//rust/platform:aarch64-linux-android", "@rules_rust//rust/platform:aarch64-unknown-fuchsia", "@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu", "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710", "@rules_rust//rust/platform:arm-unknown-linux-gnueabi", "@rules_rust//rust/platform:armv7-linux-androideabi", "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi", "@rules_rust//rust/platform:i686-apple-darwin", "@rules_rust//rust/platform:i686-linux-android", "@rules_rust//rust/platform:i686-unknown-freebsd", "@rules_rust//rust/platform:i686-unknown-linux-gnu", "@rules_rust//rust/platform:powerpc-unknown-linux-gnu", "@rules_rust//rust/platform:s390x-unknown-linux-gnu", "@rules_rust//rust/platform:wasm32-unknown-emscripten", "@rules_rust//rust/platform:x86_64-apple-darwin", "@rules_rust//rust/platform:x86_64-apple-ios", "@rules_rust//rust/platform:x86_64-linux-android", "@rules_rust//rust/platform:x86_64-unknown-freebsd", "@rules_rust//rust/platform:x86_64-unknown-fuchsia", "@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu"],
+    "cfg(unix)": ["@rules_rust//rust/platform:aarch64-apple-darwin", "@rules_rust//rust/platform:aarch64-apple-ios", "@rules_rust//rust/platform:aarch64-apple-ios-sim", "@rules_rust//rust/platform:aarch64-linux-android", "@rules_rust//rust/platform:aarch64-unknown-fuchsia", "@rules_rust//rust/platform:aarch64-unknown-linux-gnu", "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu", "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710", "@rules_rust//rust/platform:arm-unknown-linux-gnueabi", "@rules_rust//rust/platform:armv7-linux-androideabi", "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi", "@rules_rust//rust/platform:i686-apple-darwin", "@rules_rust//rust/platform:i686-linux-android", "@rules_rust//rust/platform:i686-unknown-freebsd", "@rules_rust//rust/platform:i686-unknown-linux-gnu", "@rules_rust//rust/platform:powerpc-unknown-linux-gnu", "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu", "@rules_rust//rust/platform:s390x-unknown-linux-gnu", "@rules_rust//rust/platform:wasm32-unknown-emscripten", "@rules_rust//rust/platform:x86_64-apple-darwin", "@rules_rust//rust/platform:x86_64-apple-ios", "@rules_rust//rust/platform:x86_64-linux-android", "@rules_rust//rust/platform:x86_64-unknown-freebsd", "@rules_rust//rust/platform:x86_64-unknown-fuchsia", "@rules_rust//rust/platform:x86_64-unknown-linux-gnu", "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu"],
     "cfg(windows)": ["@rules_rust//rust/platform:aarch64-pc-windows-msvc", "@rules_rust//rust/platform:i686-pc-windows-msvc", "@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
     "i686-apple-darwin": ["@rules_rust//rust/platform:i686-apple-darwin"],
     "i686-linux-android": ["@rules_rust//rust/platform:i686-linux-android"],
-    "i686-pc-windows-gnu": [],
-    "i686-pc-windows-gnullvm": [],
     "i686-pc-windows-msvc": ["@rules_rust//rust/platform:i686-pc-windows-msvc"],
     "i686-unknown-freebsd": ["@rules_rust//rust/platform:i686-unknown-freebsd"],
     "i686-unknown-linux-gnu": ["@rules_rust//rust/platform:i686-unknown-linux-gnu"],
     "powerpc-unknown-linux-gnu": ["@rules_rust//rust/platform:powerpc-unknown-linux-gnu"],
     "riscv32imc-unknown-none-elf": ["@rules_rust//rust/platform:riscv32imc-unknown-none-elf"],
+    "riscv64gc-unknown-linux-gnu": ["@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu"],
     "riscv64gc-unknown-none-elf": ["@rules_rust//rust/platform:riscv64gc-unknown-none-elf"],
     "s390x-unknown-linux-gnu": ["@rules_rust//rust/platform:s390x-unknown-linux-gnu"],
     "thumbv7em-none-eabi": ["@rules_rust//rust/platform:thumbv7em-none-eabi"],
@@ -416,8 +553,6 @@ _CONDITIONS = {
     "x86_64-apple-darwin": ["@rules_rust//rust/platform:x86_64-apple-darwin"],
     "x86_64-apple-ios": ["@rules_rust//rust/platform:x86_64-apple-ios"],
     "x86_64-linux-android": ["@rules_rust//rust/platform:x86_64-linux-android"],
-    "x86_64-pc-windows-gnu": [],
-    "x86_64-pc-windows-gnullvm": [],
     "x86_64-pc-windows-msvc": ["@rules_rust//rust/platform:x86_64-pc-windows-msvc"],
     "x86_64-unknown-freebsd": ["@rules_rust//rust/platform:x86_64-unknown-freebsd"],
     "x86_64-unknown-fuchsia": ["@rules_rust//rust/platform:x86_64-unknown-fuchsia"],
@@ -435,26 +570,6 @@ def crate_repositories():
     Returns:
       A list of repos visible to the module through the module extension.
     """
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__addr2line-0.24.2",
-        sha256 = "dfbe277e56a376000877090da837660b4427aad530e3028d44e0bffe4f89a1c1",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/addr2line/0.24.2/download"],
-        strip_prefix = "addr2line-0.24.2",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.addr2line-0.24.2.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__adler2-2.0.0",
-        sha256 = "512761e0bb2578dd7380c6baaa0f4ce03e84f95e960231d1dec8bf4d7d6e2627",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/adler2/2.0.0/download"],
-        strip_prefix = "adler2-2.0.0",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.adler2-2.0.0.bazel"),
-    )
-
     maybe(
         http_archive,
         name = "crates_vendor_pkgs__async-trait-0.1.85",
@@ -497,32 +612,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__backtrace-0.3.74",
-        sha256 = "8d82cb332cdfaed17ae235a638438ac4d4839913cc2af585c3c6746e8f8bee1a",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/backtrace/0.3.74/download"],
-        strip_prefix = "backtrace-0.3.74",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.backtrace-0.3.74.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__bitflags-1.3.2",
         sha256 = "bef38d45163c2f1dde094a7dfd33ccf595c92905c8f8f4fdc18d06fb1037718a",
         type = "tar.gz",
         urls = ["https://static.crates.io/crates/bitflags/1.3.2/download"],
         strip_prefix = "bitflags-1.3.2",
         build_file = Label("//vendor_remote_pkgs/crates:BUILD.bitflags-1.3.2.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__bitflags-2.6.0",
-        sha256 = "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/bitflags/2.6.0/download"],
-        strip_prefix = "bitflags-2.6.0",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.bitflags-2.6.0.bazel"),
     )
 
     maybe(
@@ -623,16 +718,6 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/futures-util/0.3.31/download"],
         strip_prefix = "futures-util-0.3.31",
         build_file = Label("//vendor_remote_pkgs/crates:BUILD.futures-util-0.3.31.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__gimli-0.31.1",
-        sha256 = "07e28edb80900c19c28f1072f2e8aeca7fa06b23cd4169cefe1af5aa3260783f",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/gimli/0.31.1/download"],
-        strip_prefix = "gimli-0.31.1",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.gimli-0.31.1.bazel"),
     )
 
     maybe(
@@ -807,16 +892,6 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__miniz_oxide-0.8.2",
-        sha256 = "4ffbe83022cedc1d264172192511ae958937694cd57ce297164951b8b3568394",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/miniz_oxide/0.8.2/download"],
-        strip_prefix = "miniz_oxide-0.8.2",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.miniz_oxide-0.8.2.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__mio-1.0.3",
         sha256 = "2886843bf800fba2e3377cff24abf6379b4c4d5c6681eaf9ea5b0d15090450bd",
         type = "tar.gz",
@@ -833,16 +908,6 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/nu-ansi-term/0.46.0/download"],
         strip_prefix = "nu-ansi-term-0.46.0",
         build_file = Label("//vendor_remote_pkgs/crates:BUILD.nu-ansi-term-0.46.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__object-0.36.7",
-        sha256 = "62948e14d923ea95ea2c7c86c71013138b66525b86bdc08d2dcc262bdb497b87",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/object/0.36.7/download"],
-        strip_prefix = "object-0.36.7",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.object-0.36.7.bazel"),
     )
 
     maybe(
@@ -957,26 +1022,6 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__redox_syscall-0.5.8",
-        sha256 = "03a862b389f93e68874fbf580b9de08dd02facb9a788ebadaf4a3fd33cf58834",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/redox_syscall/0.5.8/download"],
-        strip_prefix = "redox_syscall-0.5.8",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.redox_syscall-0.5.8.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__rustc-demangle-0.1.24",
-        sha256 = "719b953e2095829ee67db738b3bfa9fa368c94900df327b3f07fe6e794d2fe1f",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/rustc-demangle/0.1.24/download"],
-        strip_prefix = "rustc-demangle-0.1.24",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.rustc-demangle-0.1.24.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__ryu-1.0.18",
         sha256 = "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f",
         type = "tar.gz",
@@ -1003,16 +1048,6 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/serde/1.0.217/download"],
         strip_prefix = "serde-1.0.217",
         build_file = Label("//vendor_remote_pkgs/crates:BUILD.serde-1.0.217.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__serde_derive-1.0.217",
-        sha256 = "5a9bf7cf98d04a2b28aead066b7496853d4779c9cc183c440dbac457641e19a0",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/serde_derive/1.0.217/download"],
-        strip_prefix = "serde_derive-1.0.217",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.serde_derive-1.0.217.bazel"),
     )
 
     maybe(
@@ -1267,16 +1302,6 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__valuable-0.1.0",
-        sha256 = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/valuable/0.1.0/download"],
-        strip_prefix = "valuable-0.1.0",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.valuable-0.1.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__want-0.3.1",
         sha256 = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e",
         type = "tar.gz",
@@ -1307,26 +1332,6 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__winapi-i686-pc-windows-gnu-0.4.0",
-        sha256 = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/winapi-i686-pc-windows-gnu/0.4.0/download"],
-        strip_prefix = "winapi-i686-pc-windows-gnu-0.4.0",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.winapi-i686-pc-windows-gnu-0.4.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__winapi-x86_64-pc-windows-gnu-0.4.0",
-        sha256 = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/winapi-x86_64-pc-windows-gnu/0.4.0/download"],
-        strip_prefix = "winapi-x86_64-pc-windows-gnu-0.4.0",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.winapi-x86_64-pc-windows-gnu-0.4.0.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__windows-sys-0.52.0",
         sha256 = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d",
         type = "tar.gz",
@@ -1347,16 +1352,6 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__windows_aarch64_gnullvm-0.52.6",
-        sha256 = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/windows_aarch64_gnullvm/0.52.6/download"],
-        strip_prefix = "windows_aarch64_gnullvm-0.52.6",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_aarch64_gnullvm-0.52.6.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__windows_aarch64_msvc-0.52.6",
         sha256 = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469",
         type = "tar.gz",
@@ -1367,52 +1362,12 @@ def crate_repositories():
 
     maybe(
         http_archive,
-        name = "crates_vendor_pkgs__windows_i686_gnu-0.52.6",
-        sha256 = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/windows_i686_gnu/0.52.6/download"],
-        strip_prefix = "windows_i686_gnu-0.52.6",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_i686_gnu-0.52.6.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__windows_i686_gnullvm-0.52.6",
-        sha256 = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/windows_i686_gnullvm/0.52.6/download"],
-        strip_prefix = "windows_i686_gnullvm-0.52.6",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_i686_gnullvm-0.52.6.bazel"),
-    )
-
-    maybe(
-        http_archive,
         name = "crates_vendor_pkgs__windows_i686_msvc-0.52.6",
         sha256 = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66",
         type = "tar.gz",
         urls = ["https://static.crates.io/crates/windows_i686_msvc/0.52.6/download"],
         strip_prefix = "windows_i686_msvc-0.52.6",
         build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_i686_msvc-0.52.6.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__windows_x86_64_gnu-0.52.6",
-        sha256 = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/windows_x86_64_gnu/0.52.6/download"],
-        strip_prefix = "windows_x86_64_gnu-0.52.6",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_x86_64_gnu-0.52.6.bazel"),
-    )
-
-    maybe(
-        http_archive,
-        name = "crates_vendor_pkgs__windows_x86_64_gnullvm-0.52.6",
-        sha256 = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d",
-        type = "tar.gz",
-        urls = ["https://static.crates.io/crates/windows_x86_64_gnullvm/0.52.6/download"],
-        strip_prefix = "windows_x86_64_gnullvm-0.52.6",
-        build_file = Label("//vendor_remote_pkgs/crates:BUILD.windows_x86_64_gnullvm-0.52.6.bazel"),
     )
 
     maybe(

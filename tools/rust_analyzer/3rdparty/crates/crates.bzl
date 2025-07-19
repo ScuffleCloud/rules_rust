@@ -25,6 +25,7 @@ def crate_repositories():
         name = "rrra",
         build_file = Label("//tools/rust_analyzer/3rdparty/crates:BUILD.bazel"),
         defs_module = Label("//tools/rust_analyzer/3rdparty/crates:defs.bzl"),
+        alias_rules_module = Label("//tools/rust_analyzer/3rdparty/crates:alias_rules.bzl"),
     )
 
     direct_deps = [struct(repo = "rrra", is_dev_dep = False)]

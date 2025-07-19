@@ -75,6 +75,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -99,6 +100,6 @@ rust_library(
     version = "1.0.35",
     deps = [
         "@cui__crc32fast-1.3.2//:crc32fast",
-        "@cui__miniz_oxide-0.8.0//:miniz_oxide",
+        "@cui__miniz_oxide-0.8.0//:miniz_oxide",  # cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))
     ],
 )

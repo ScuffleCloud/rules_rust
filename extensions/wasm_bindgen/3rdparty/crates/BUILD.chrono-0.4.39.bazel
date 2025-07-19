@@ -80,6 +80,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -106,92 +107,95 @@ rust_library(
         "@rrwbd__num-traits-0.2.19//:num_traits",
     ] + select({
         "@rules_rust//rust/platform:aarch64-apple-darwin": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-apple-darwin
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-apple-ios
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-apple-ios-sim": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-apple-ios-sim
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-linux-android": [
-            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # aarch64-linux-android
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-linux-android
+            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # cfg(target_os = "android")
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # aarch64-pc-windows-msvc
+            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-fuchsia": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-unknown-fuchsia
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-linux-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-unknown-linux-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nixos-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-unknown-linux-gnu, aarch64-unknown-nixos-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:aarch64-unknown-nto-qnx710": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # aarch64-unknown-nto-qnx710
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:arm-unknown-linux-gnueabi": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # arm-unknown-linux-gnueabi
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:armv7-linux-androideabi": [
-            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # armv7-linux-androideabi
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # armv7-linux-androideabi
+            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # cfg(target_os = "android")
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:armv7-unknown-linux-gnueabi": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # armv7-unknown-linux-gnueabi
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:i686-apple-darwin": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # i686-apple-darwin
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:i686-linux-android": [
-            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # i686-linux-android
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # i686-linux-android
+            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # cfg(target_os = "android")
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # i686-pc-windows-msvc
+            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:i686-unknown-freebsd": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # i686-unknown-freebsd
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # i686-unknown-linux-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # powerpc-unknown-linux-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
+        ],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # s390x-unknown-linux-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:wasm32-unknown-emscripten": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # wasm32-unknown-emscripten
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-apple-darwin": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-apple-darwin
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-apple-ios": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-apple-ios
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-linux-android": [
-            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # x86_64-linux-android
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-linux-android
+            "@rrwbd__android-tzdata-0.1.1//:android_tzdata",  # cfg(target_os = "android")
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # x86_64-pc-windows-msvc
+            "@rrwbd__windows-targets-0.52.6//:windows_targets",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-freebsd": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-unknown-freebsd
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-fuchsia": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-unknown-fuchsia
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-linux-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-unknown-linux-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "@rules_rust//rust/platform:x86_64-unknown-nixos-gnu": [
-            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # x86_64-unknown-linux-gnu, x86_64-unknown-nixos-gnu
+            "@rrwbd__iana-time-zone-0.1.61//:iana_time_zone",  # cfg(unix)
         ],
         "//conditions:default": [],
     }),

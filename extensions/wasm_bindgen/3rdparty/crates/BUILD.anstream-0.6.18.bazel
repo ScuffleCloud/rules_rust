@@ -75,6 +75,7 @@ rust_library(
         "@rules_rust//rust/platform:i686-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:powerpc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv32imc-unknown-none-elf": [],
+        "@rules_rust//rust/platform:riscv64gc-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:riscv64gc-unknown-none-elf": [],
         "@rules_rust//rust/platform:s390x-unknown-linux-gnu": [],
         "@rules_rust//rust/platform:thumbv7em-none-eabi": [],
@@ -106,13 +107,13 @@ rust_library(
         "@rrwbd__utf8parse-0.2.2//:utf8parse",
     ] + select({
         "@rules_rust//rust/platform:aarch64-pc-windows-msvc": [
-            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # aarch64-pc-windows-msvc
+            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:i686-pc-windows-msvc": [
-            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # i686-pc-windows-msvc
+            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # cfg(windows)
         ],
         "@rules_rust//rust/platform:x86_64-pc-windows-msvc": [
-            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # x86_64-pc-windows-msvc
+            "@rrwbd__anstyle-wincon-3.0.6//:anstyle_wincon",  # cfg(windows)
         ],
         "//conditions:default": [],
     }),

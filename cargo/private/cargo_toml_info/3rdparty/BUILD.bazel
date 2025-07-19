@@ -5,7 +5,7 @@ crates_vendor(
     cargo_lockfile = "Cargo.Bazel.lock",
     mode = "remote",
     packages = {
-        "cargo_toml": crate.spec(version = "0.20.5"),
+        "cargo_toml": crate.spec(version = "0.22.1"),
     },
     repository_name = "rrcti",
     tags = ["manual"],
