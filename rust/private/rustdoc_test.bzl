@@ -130,6 +130,7 @@ def _rust_doc_test_impl(ctx):
         compile_data_targets = crate.compile_data_targets,
         wrapped_crate_type = crate.type,
         crate_features = crate.crate_features,
+        version = crate.version,
         owner = ctx.label,
     )
 

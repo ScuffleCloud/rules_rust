@@ -224,6 +224,7 @@ def _rust_library_common(ctx, crate_type):
             compile_data = depset(compile_data),
             compile_data_targets = depset(ctx.attr.compile_data),
             owner = ctx.label,
+            version = ctx.attr.version if hasattr(ctx.attr, "version") else None,
             crate_features = ctx.attr.crate_features,
         ),
     )
@@ -288,6 +289,7 @@ def _rust_binary_impl(ctx):
             compile_data = depset(compile_data),
             compile_data_targets = depset(ctx.attr.compile_data),
             owner = ctx.label,
+            version = ctx.attr.version if hasattr(ctx.attr, "version") else None,
             crate_features = ctx.attr.crate_features,
         ),
     )
@@ -414,6 +416,7 @@ def _rust_test_impl(ctx):
             compile_data = depset(compile_data),
             compile_data_targets = compile_data_targets,
             wrapped_crate_type = crate.type,
+            version = crate.version,
             owner = ctx.label,
         )
     else:
@@ -477,6 +480,7 @@ def _rust_test_impl(ctx):
             compile_data = depset(compile_data),
             compile_data_targets = depset(ctx.attr.compile_data),
             owner = ctx.label,
+            version = ctx.attr.version if hasattr(ctx.attr, "version") else None,
             crate_features = [],
         )
 

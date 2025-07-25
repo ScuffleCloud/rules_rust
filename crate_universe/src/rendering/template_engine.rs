@@ -59,6 +59,13 @@ impl TemplateEngine {
                 )),
             ),
             (
+                "partials/module/versions_map.j2",
+                include_str!(concat!(
+                    env!("CARGO_MANIFEST_DIR"),
+                    "/src/rendering/templates/partials/module/versions_map.j2"
+                )),
+            ),
+            (
                 "partials/module/repo_git.j2",
                 include_str!(concat!(
                     env!("CARGO_MANIFEST_DIR"),
