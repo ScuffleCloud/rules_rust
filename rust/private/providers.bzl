@@ -41,6 +41,7 @@ CrateInfo = provider(
             "str: The type of this crate " +
             "(see [rustc --crate-type](https://doc.rust-lang.org/rustc/command-line-arguments.html#--crate-type-a-list-of-types-of-crates-for-the-compiler-to-emit))."
         ),
+        "version": "str, optional: The version of the current crate.",
         "wrapped_crate_type": (
             "str, optional: The original crate type for targets generated using a previously defined " +
             "crate (typically tests using the `rust_test::crate` attribute)"
