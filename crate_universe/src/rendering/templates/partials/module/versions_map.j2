@@ -1,0 +1,6 @@
+{
+    {%- for id, path in context.workspace_members %}
+    {%- set workspace_member = context.crates | get(key=id) %}
+    "{{ path }}": "{{ workspace_member.version }}",
+    {%- endfor %}
+}
