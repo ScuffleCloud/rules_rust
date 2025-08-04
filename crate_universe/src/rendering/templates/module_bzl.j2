@@ -53,7 +53,8 @@ def _flatten_features(features, enabled_features):
             continue
 
         if feat not in features:
-            fail("{} is not apart of the features for this package".format(feat))
+            print("{} is not apart of the features for this package".format(feat))
+            continue
 
         resolved.add(feat)
         queue.extend(features[feat])

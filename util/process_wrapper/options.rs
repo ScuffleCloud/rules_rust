@@ -44,6 +44,8 @@ pub(crate) struct Options {
     // If set, also logs all unprocessed output from the rustc output to this file.
     // Meant to be used to get json output out of rustc for tooling usage.
     pub(crate) output_file: Option<String>,
+    // When set will always return zero status code.
+    pub(crate) do_not_fail: bool,
     // If set, it configures rustc to emit an rmeta file and then
     // quit.
     pub(crate) rustc_quit_on_rmeta: bool,
@@ -66,6 +68,7 @@ pub(crate) fn options() -> Result<Options, OptionError> {
     let mut output_file = None;
     let mut rustc_quit_on_rmeta_raw = None;
     let mut rustc_output_format_raw = None;
+    let mut do_not_fail_raw = None;
     let mut flags = Flags::new();
     flags.define_repeated_flag("--subst", "", &mut subst_mapping_raw);
     flags.define_flag("--stable-status-file", "", &mut stable_status_file_raw);
@@ -113,6 +116,11 @@ pub(crate) fn options() -> Result<Options, OptionError> {
         'rendered' will extract the rendered message and print that.\n\
         Default: `rendered`",
         &mut rustc_output_format_raw,
+    );
+    flags.define_flag(
+        "--do-not-fail",
+        "When set will always return zero status code.",
+        &mut do_not_fail_raw,
     );
 
     let mut child_args = match flags
@@ -183,6 +191,8 @@ pub(crate) fn options() -> Result<Options, OptionError> {
         })
         .transpose()?;
 
+    let do_not_fail = do_not_fail_raw.is_some_and(|s| s == "true");
+
     // Prepare the environment variables, unifying those read from files with the ones
     // of the current process.
     let vars = environment_block(
@@ -212,6 +222,7 @@ pub(crate) fn options() -> Result<Options, OptionError> {
         output_file,
         rustc_quit_on_rmeta,
         rustc_output_format,
+        do_not_fail,
     })
 }
 

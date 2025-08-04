@@ -551,10 +551,10 @@ impl CrateContext {
         };
 
         fn map_deps<'a>(
-            deps: &'a BTreeSet<Dependency>,
-            new_crate_dep: impl Fn(&Dependency) -> Option<CrateDependency> + 'a,
+            deps: impl IntoIterator<Item = &'a Dependency> + 'a,
+            new_crate_dep: impl Fn(&'a Dependency) -> Option<CrateDependency> + 'a,
         ) -> impl Iterator<Item = (CrateDependency, Option<String>)> + 'a {
-            deps.iter().flat_map(move |dep| {
+            deps.into_iter().flat_map(move |dep| {
                 new_crate_dep(dep).into_iter().flat_map(|cdep| {
                     dep.platforms
                         .is_empty()
@@ -1181,6 +1181,12 @@ mod test {
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
                 .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1229,6 +1235,12 @@ mod test {
                 .packages
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
                 .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
@@ -1300,6 +1312,12 @@ mod test {
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
                 .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1348,6 +1366,12 @@ mod test {
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
                 .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
+                .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
             &annotations.pairred_extras,
@@ -1385,6 +1409,12 @@ mod test {
                 .packages
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
                 .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
@@ -1434,6 +1464,12 @@ mod test {
                 .packages
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
                 .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
@@ -1549,11 +1585,11 @@ mod test {
             .entry(id.clone())
             .or_default()
             .insert(
+                TargetTriple::from_bazel("x86_64-unknown-linux-gnu".into()),
                 CrateAnnotation {
                     features: BTreeSet::from_iter(["unique_feature".to_owned()]),
                     ..Default::default()
                 },
-                None,
             );
 
         let include_binaries = false;
@@ -1566,6 +1602,12 @@ mod test {
                 .packages
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
                 .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
@@ -1605,6 +1647,12 @@ mod test {
                 .packages
                 .values()
                 .find(|pkg| CrateId::from(*pkg) == id)
+                .unwrap(),
+            annotations
+                .metadata
+                .workspace_metadata
+                .resolver_metadata
+                .get(&id)
                 .unwrap(),
             &annotations.metadata,
             &annotations.lockfile.crates,
