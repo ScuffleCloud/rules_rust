@@ -226,7 +226,11 @@ fn main() -> Result<(), ProcessWrapperError> {
         }
     }
 
-    exit(code)
+    exit(if opts.do_not_fail {
+        0
+    } else {
+        code
+    })
 }
 
 #[cfg(test)]
