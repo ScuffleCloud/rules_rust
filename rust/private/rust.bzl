@@ -383,6 +383,7 @@ def _rust_test_impl(ctx):
             compile_data_targets = compile_data_targets,
             wrapped_crate_type = crate.type,
             version = crate.version,
+            crate_features = crate.crate_features,
             owner = ctx.label,
         )
     else:
