@@ -450,6 +450,16 @@ def incompatible_do_not_include_data_in_compile_data():
         issue = "https://github.com/bazelbuild/rules_rust/issues/2977",
     )
 
+# buildifier: disable=unnamed-macro
+def incompatible_do_not_transform_sources():
+    """A flag to control whether to include data files in compile_data.
+    """
+    incompatible_flag(
+        name = "incompatible_do_not_transform_sources",
+        build_setting_default = False,
+        issue = "https://github.com/bazelbuild/rules_rust/issues/<none>",
+    )
+
 def codegen_units():
     """The default value for `--codegen-units` which also affects resource allocation for rustc actions.
 
