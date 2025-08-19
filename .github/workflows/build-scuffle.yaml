@@ -64,11 +64,16 @@ jobs:
           cp "./crate_universe/target/release/$BIN_NAME" "${NAME}/"
 
           cat > "${NAME}/BUILD" <<EOF
-          filegroup(
-            name = "cargo-bazel",
-            srcs = ["${BIN_NAME}"],
-            visibility = ["//visibility:public"],
+          exports_files(["${BIN_NAME}"])
+
+          load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+          sh_binary(
+              name = "bin",
+              srcs = ["${BIN_NAME}"],
+              visibility = ["//visibility:public"],
           )
+
           EOF
 
           tar -cf - "${NAME}" | zstd --ultra -22 -o "artifacts-archive/$NAME.tar.zst"
@@ -76,7 +81,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.NAME }}.tar.zst
+          name: ${{ env.NAME }}
           path: artifacts-archive/${{ env.NAME }}.tar.zst
 
   release:
@@ -92,28 +97,35 @@ jobs:
 
       - name: Generate release body
         run: |
-          echo 'http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")' > release_body.txt
-          echo "" >> release_body.txt
+          set -euo pipefail
 
-          for archive in ./artifacts/*.tar.zst; do
+          shopt -s globstar  # enable recursive globbing
+
+          echo '```' > release_body.txt
+          echo 'http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")' >> release_body.txt
+          echo '' >> release_body.txt
+
+          echo 'cargo_bazel_url = "https://github.com/${{ github.repository }}/releases/download/commit-${{ github.sha }}/"' >> release_body.txt
+          echo '' >> release_body.txt
+
+          for archive in ./artifacts/**/*.tar.zst; do
             FILE_NAME=$(basename "$archive")
             SHA=$(sha256sum "$archive" | awk '{print $1}')
             NAME="${FILE_NAME%.tar.zst}"
-            URL="https://github.com/${{ github.repository }}/releases/download/commit-${{ github.sha }}/$FILE_NAME"
-            STRIP_PREFIX="$NAME"
 
             cat >> release_body.txt <<EOF
           http_archive(
               name = "$NAME",
               sha256 = "$SHA",
-              strip_prefix = "$STRIP_PREFIX",
-              url = "$URL",
+              strip_prefix = "$NAME",
+              url = cargo_bazel_url + "$FILE_NAME",
           )
           EOF
 
-            echo "" >> release_body.txt
+            echo '' >> release_body.txt
           done
 
+          echo '```' >> release_body.txt
           cat release_body.txt
 
       - name: Create GitHub Release
@@ -122,6 +134,6 @@ jobs:
           tag_name: commit-${{ github.sha }}
           name: "cargo-bazel build for ${{ github.sha }}"
           body_path: release_body.txt
-          files: ./artifacts/*.tar.zst
+          files: ./artifacts/**/*.tar.zst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
