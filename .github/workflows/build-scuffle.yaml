@@ -19,21 +19,24 @@ jobs:
             arch: x86_64
           - runner: ubuntu-22.04-arm
             os: linux
-            arch: arm64
+            arch: aarch64
           - runner: windows-2022
             os: windows
             arch: x86_64
+          - runner: windows-11-arm
+            os: windows
+            arch: aarch64
           - runner: macos-13
-            os: macos
+            os: darwin
             arch: x86_64
           - runner: macos-14
-            os: macos
-            arch: arm64
+            os: darwin
+            arch: aarch64
     runs-on: ${{ matrix.runner }}
     env:
-        BIN_EXT: ${{ matrix.os == 'windows' && '.exe' || '' }}
+      NAME: "cargo-bazel-${{ matrix.os }}-${{ matrix.arch }}"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
       - name: Install rust toolchains for host
         run: |
@@ -45,26 +48,73 @@ jobs:
         run: cargo build -r -p cargo-bazel
         working-directory: ./crate_universe
 
+      - name: Generate archive with BUILD
+        run: |
+          mkdir -p artifacts-archive
+          BIN_NAME="cargo-bazel${{ runner.os == 'Windows' && '.exe' || '' }}"
+
+          mkdir -p "${NAME}"
+          cp "./crate_universe/target/release/$BIN_NAME" "${NAME}/"
+
+          cat > "${NAME}/BUILD" <<EOF
+          filegroup(
+            name = "cargo-bazel",
+            srcs = ["${BIN_NAME}"],
+            visibility = ["//visibility:public"],
+          )
+          EOF
+
+          tar -cf - "${NAME}" | zstd --ultra -22 -o "artifacts-archive/$NAME.tar.zst"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cargo-bazel-${{ matrix.os }}-${{ matrix.arch }}${{ env.BIN_EXT }}
-          path: ./crate_universe/target/release/cargo-bazel${{ env.BIN_EXT }}
+          name: ${{ env.NAME }}.tar.zst
+          path: artifacts-archive/${{ env.NAME }}.tar.zst
 
   release:
     needs: builds
     runs-on: ubuntu-22.04
+    permissions:
+      contents: write
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v4
         with:
           path: ./artifacts
+
+      - name: Generate release body
+        run: |
+          echo 'http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")' > release_body.txt
+          echo "" >> release_body.txt
+
+          for archive in ./artifacts/*.tar.zst; do
+            FILE_NAME=$(basename "$archive")
+            SHA=$(sha256sum "$archive" | awk '{print $1}')
+            NAME="${FILE_NAME%.tar.zst}"
+            URL="https://github.com/${{ github.repository }}/releases/download/commit-${{ github.sha }}/$FILE_NAME"
+            STRIP_PREFIX="$NAME"
+
+            cat >> release_body.txt <<EOF
+          http_archive(
+              name = "$NAME",
+              sha256 = "$SHA",
+              strip_prefix = "$STRIP_PREFIX",
+              url = "$URL",
+          )
+          EOF
+
+            echo "" >> release_body.txt
+          done
+
+          cat release_body.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: commit-${{ github.sha }}
           name: "cargo-bazel build for ${{ github.sha }}"
-          files: ./artifacts/**/*
+          body_path: release_body.txt
+          files: ./artifacts/*.tar.zst
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
