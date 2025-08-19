@@ -38,6 +38,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install zstd
+        if: ${{ runner.os == 'Windows' }}
+        run: choco install zstd
+
       - name: Install rust toolchains for host
         run: |
           version="$(grep 'DEFAULT_RUST_VERSION =' ./rust/private/common.bzl | grep -o '[[:digit:].]\+')"
