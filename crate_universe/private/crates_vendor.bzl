@@ -151,6 +151,22 @@ def _sys_runfile_env(ctx, name, file, is_windows):
         "_ENVIRON+=({0}=\"${{{0}}}\")".format(name),
     ])
 
+def _sys_env(ctx, name, value, is_windows):
+    if is_windows:
+        return "set \"{}\" {}".format(
+            name,
+            value,
+        )
+
+    return "\n".join([
+        "export {}=\"{}\"".format(
+            name,
+            value,
+        ),
+        "_ENVIRON+=({0}=\"${{{0}}}\")".format(name),
+    ])
+
+
 def _expand_env(value, is_windows):
     if is_windows:
         return "%{}%".format(value)
@@ -405,6 +421,9 @@ def _crates_vendor_impl(ctx):
         _sys_runfile_env(ctx, "CARGO", toolchain.cargo, is_windows),
         _sys_runfile_env(ctx, "RUSTC", toolchain.rustc, is_windows),
     ]
+
+    if ctx.attr.stable_as_nightly:
+        environ.append(_sys_env(ctx, "RUSTC_BOOTSTRAP", "1", is_windows))
 
     args = ["vendor"]
 
