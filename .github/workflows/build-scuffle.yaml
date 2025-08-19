@@ -40,7 +40,10 @@ jobs:
 
       - name: Install zstd
         if: ${{ runner.os == 'Windows' }}
-        run: choco install zstd
+        uses: MinoruSekine/setup-scoop@v4.0.2
+        with:
+          buckets: main
+          apps: zstd
 
       - name: Install rust toolchains for host
         run: |
