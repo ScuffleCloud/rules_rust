@@ -89,6 +89,8 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
+    env:
+      TAG_NAME: commit-${{ github.sha }}
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -101,11 +103,21 @@ jobs:
 
           shopt -s globstar  # enable recursive globbing
 
-          echo '```' > release_body.txt
-          echo 'http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")' >> release_body.txt
-          echo '' >> release_body.txt
+          echo '```bazel' > release_body.txt
+          cat >> release_body.txt <<EOF
+          bazel_dep(name = "rules_rust")
 
-          echo 'cargo_bazel_url = "https://github.com/${{ github.repository }}/releases/download/commit-${{ github.sha }}/"' >> release_body.txt
+          git_override(
+              module_name = "rules_rust",
+              commit = "${{ github.sha }}",
+              remote = "https://github.com/${{ github.repository }}.git",
+          )
+
+          http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+          cargo_bazel_url = "https://github.com/${{ github.repository }}/releases/download/${{ env.TAG_NAME }}/"
+          EOF
+
           echo '' >> release_body.txt
 
           for archive in ./artifacts/**/*.tar.zst; do
@@ -131,7 +143,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: commit-${{ github.sha }}
+          tag_name: ${{ env.TAG_NAME }}
           name: "cargo-bazel build for ${{ github.sha }}"
           body_path: release_body.txt
           files: ./artifacts/**/*.tar.zst
