@@ -673,21 +673,6 @@ def load_llvm_tools(ctx, target_triple, version, iso_date = None):
 
     return BUILD_for_llvm_tools(target_triple), sha256
 
-def check_version_valid(version, iso_date, param_prefix = ""):
-    """Verifies that the provided rust version and iso_date make sense.
-
-    Args:
-        version (str): The rustc version
-        iso_date (str): The rustc nightly version's iso date
-        param_prefix (str, optional): The name of the tool who's version is being checked.
-    """
-
-    if not version and iso_date:
-        fail("{param_prefix}iso_date must be paired with a {param_prefix}version".format(param_prefix = param_prefix))
-
-    if version in ("beta", "nightly") and not iso_date:
-        fail("{param_prefix}iso_date must be specified if version is 'beta' or 'nightly'".format(param_prefix = param_prefix))
-
 def produce_tool_suburl(tool_name, target_triple, version, iso_date = None):
     """Produces a fully qualified Rust tool name for URL
 
@@ -803,7 +788,6 @@ def load_arbitrary_tool(
         Dict[str, str]: A mapping of the tool name to it's sha256 value if the requested tool does not have
             enough information in the repository_ctx to be reproducible.
     """
-    check_version_valid(version, iso_date, param_prefix = tool_name + "_")
 
     # View the indices mentioned in the docstring to find the tool_suburl for a given
     # tool.

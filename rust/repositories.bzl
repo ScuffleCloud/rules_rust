@@ -20,7 +20,6 @@ load(
     "DEFAULT_NIGHTLY_VERSION",
     "DEFAULT_STATIC_RUST_URL_TEMPLATES",
     "TINYJSON_KWARGS",
-    "check_version_valid",
     "includes_rust_analyzer_proc_macro_srv",
     "load_cargo",
     "load_clippy",
@@ -431,8 +430,6 @@ def _rust_toolchain_tools_repository_impl(ctx):
         version = version_array[0]
         iso_date = version_array[1]
 
-    check_version_valid(ctx.attr.version, iso_date)
-
     exec_triple = triple(ctx.attr.exec_triple)
 
     rustc_content, rustc_sha256 = load_rust_compiler(
@@ -464,14 +461,7 @@ def _rust_toolchain_tools_repository_impl(ctx):
     if ctx.attr.rustfmt_version:
         rustfmt_version = ctx.attr.rustfmt_version
         rustfmt_iso_date = None
-        if rustfmt_version in ("nightly", "beta"):
-            if iso_date:
-                rustfmt_iso_date = iso_date
-            else:
-                fail("`rustfmt_version` does not include an iso_date. The following repository should either set `iso_date` or update `rustfmt_version` to include an iso_date suffix: {}".format(
-                    ctx.name,
-                ))
-        elif rustfmt_version.startswith(("nightly", "beta")):
+        if rustfmt_version.startswith(("nightly/", "beta/")):
             rustfmt_version, _, rustfmt_iso_date = rustfmt_version.partition("/")
         rustfmt_content, rustfmt_sha256 = load_rustfmt(
             ctx = ctx,
