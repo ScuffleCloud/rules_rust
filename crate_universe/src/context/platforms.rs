@@ -149,7 +149,7 @@ mod test {
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
-                target: "mock_crate_b".to_owned(),
+                target: Some("mock_crate_b".to_owned()),
                 alias: None,
                 local_path: None,
             },
@@ -210,7 +210,7 @@ mod test {
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
-                target: "mock_crate_b".to_owned(),
+                target: Some("mock_crate_b".to_owned()),
                 alias: None,
                 local_path: None,
             },
@@ -299,7 +299,7 @@ mod test {
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
-                target: "mock_crate_b".to_owned(),
+                target: Some("mock_crate_b".to_owned()),
                 alias: None,
                 local_path: None,
             },
@@ -368,7 +368,7 @@ mod test {
         deps.insert(
             CrateDependency {
                 id: CrateId::new("mock_crate_b".to_owned(), VERSION_ZERO_ONE_ZERO),
-                target: "mock_crate_b".to_owned(),
+                target: Some("mock_crate_b".to_owned()),
                 alias: None,
                 local_path: None,
             },

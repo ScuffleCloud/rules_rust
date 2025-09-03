@@ -24,7 +24,7 @@ pub struct CrateDependency {
 
     /// The target name of the dependency. Note this may differ from the
     /// dependency's package name in cases such as build scripts.
-    pub target: String,
+    pub target: Option<String>,
 
     /// Some dependencies are assigned aliases. This is tracked here
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -533,7 +533,7 @@ impl CrateContext {
             // Unfortunately, The package graph and resolve graph of cargo metadata have different representations
             // for the crate names (resolve graph sanitizes names to match module names) so to get the rest of this
             // content to align when rendering, the dependency target needs to be explicitly sanitized.
-            let target = sanitize_module_name(&dep.target_name);
+            let target = dep.target_name.as_deref().map(sanitize_module_name);
             let pkg = &metadata.packages[&metadata.package_map[&dep.id]];
             if metadata.workspace_members.contains(&pkg.id) {
                 return None;
@@ -663,7 +663,7 @@ impl CrateContext {
                 common_attrs.deps.insert(
                     CrateDependency {
                         id: crate_id.clone(),
-                        target: target.crate_name.clone(),
+                        target: Some(target.crate_name.clone()),
                         alias: None,
                         local_path: match source_annotations.get(&package.id) {
                             Some(SourceAnnotation::Path { path }) => Some(path.clone()),

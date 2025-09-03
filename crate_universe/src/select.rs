@@ -372,18 +372,18 @@ impl<T> Select<BTreeSet<T>>
 where
     T: SelectableOrderedValue,
 {
-    pub(crate) fn map<U, F>(self, func: F) -> Select<BTreeSet<U>>
+    pub(crate) fn filter_map<U, F>(self, func: F) -> Select<BTreeSet<U>>
     where
         U: SelectableOrderedValue,
-        F: Copy + FnMut(T) -> U,
+        F: Copy + FnMut(T) -> Option<U>,
     {
         Select {
-            common: self.common.into_iter().map(func).collect(),
+            common: self.common.into_iter().filter_map(func).collect(),
             selects: self
                 .selects
                 .into_iter()
                 .map(|(configuration, values)| {
-                    (configuration, values.into_iter().map(func).collect())
+                    (configuration, values.into_iter().filter_map(func).collect())
                 })
                 .collect(),
         }

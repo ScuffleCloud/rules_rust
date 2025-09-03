@@ -907,11 +907,11 @@ impl Renderer {
         let mut aliases: Select<BTreeMap<Label, String>> = Select::default();
         for dependency_select in dependency_selects.iter() {
             for (configuration, dependency) in dependency_select.items() {
-                if let Some(alias) = &dependency.alias {
+                if let (Some(alias), Some(target)) = (&dependency.alias, &dependency.target) {
                     let label = self.crate_label(
                         &dependency.id.name,
                         &dependency.id.version.to_string(),
-                        &dependency.target,
+                        target,
                     );
                     aliases.insert((label, alias.clone()), configuration.clone());
                 }
@@ -926,9 +926,12 @@ impl Renderer {
         extra_deps: Select<BTreeSet<Label>>,
     ) -> Select<BTreeSet<Label>> {
         Select::merge(
-            deps.map(|dep| match dep.local_path {
-                Some(path) => Label::from_str(&format!("//{}:{}", path, &dep.target)).unwrap(),
-                _ => self.crate_label(&dep.id.name, &dep.id.version.to_string(), &dep.target),
+            deps.filter_map(|dep| {
+                let target = dep.target.as_deref()?;
+                Some(match dep.local_path {
+                    Some(path) => Label::from_str(&format!("//{}:{}", path, target)).unwrap(),
+                    _ => self.crate_label(&dep.id.name, &dep.id.version.to_string(), target),
+                })
             }),
             extra_deps,
         )
@@ -2122,7 +2125,7 @@ mod test {
                 common_attrs: CommonAttributes {
                     deps: Select::from_value(BTreeSet::from([CrateDependency {
                         id: crate_id,
-                        target: "target".into(),
+                        target: Some("target".into()),
                         // this is identical to what we have in the `name` attribute
                         // which creates conflict in `render_module_build_file`
                         alias: Some("mock_crate".into()),
@@ -2257,13 +2260,13 @@ mod test {
                         // These two dependencies are identical, except one is aliased.
                         CrateDependency {
                             id: dependency_id.clone(),
-                            target: "my_dependency".into(),
+                            target: Some("my_dependency".into()),
                             alias: None,
                             local_path: None,
                         },
                         CrateDependency {
                             id: dependency_id,
-                            target: "my_dependency".into(),
+                            target: Some("my_dependency".into()),
                             alias: Some("my_dependency_other".into()),
                             local_path: None,
                         },

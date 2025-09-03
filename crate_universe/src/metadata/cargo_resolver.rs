@@ -133,7 +133,7 @@ pub(crate) struct Dependency {
     pub(crate) id: CrateId,
 
     /// The library target name of the dependency.
-    pub(crate) target_name: String,
+    pub(crate) target_name: Option<String>,
 
     /// The alias for the dependency from the perspective of the current package
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -555,15 +555,12 @@ impl<'a> CargoResolver<'a> {
 
             for ((dep_id, _, kind), dep) in &package.deps {
                 let dep_pkg = &self.dependency_resolve[dep_id];
-                if dep_pkg.library_target_name.is_none() {
-                    continue;
-                }
                 for (alias, optional) in &dep.aliases_optional {
                     let dependency = Dependency {
                         features: dep.features.iter().map(|f| f.to_string()).collect(),
                         alias: alias.map(|a| a.replace("-", "_")),
                         id: CrateId::from(dep_pkg.package),
-                        target_name: dep_pkg.library_target_name.unwrap().to_string(),
+                        target_name: dep_pkg.library_target_name.map(|t| t.to_string()),
                         optional: *optional,
                         platforms: dep.platforms.iter().copied().cloned().collect(),
                     };
